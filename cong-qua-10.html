@@ -69,12 +69,19 @@
       margin-bottom: 18px;
     }
 
-    .field label {
+    .field label,
+    .field legend {
       display: block;
       margin-bottom: 8px;
       color: var(--muted);
       font-size: 14px;
       font-weight: 700;
+    }
+
+    fieldset {
+      border: 0;
+      padding: 0;
+      margin: 0;
     }
 
     input[type="number"] {
@@ -98,6 +105,36 @@
     input[type="number"] {
       appearance: textfield;
       -moz-appearance: textfield;
+    }
+
+    .segmented {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+
+    .choice {
+      display: block;
+      height: 42px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 0 8px;
+      background: #fff;
+      cursor: pointer;
+      line-height: 40px;
+      font-weight: 700;
+      text-align: center;
+      user-select: none;
+    }
+
+    .choice input {
+      display: none;
+    }
+
+    .choice:has(input:checked) {
+      border-color: var(--primary);
+      background: var(--soft);
+      color: var(--primary-dark);
     }
 
     .actions {
@@ -201,9 +238,6 @@
       font-weight: 800;
       font-variant-numeric: tabular-nums;
       white-space: nowrap;
-    }
-
-    .expression {
       display: flex;
       align-items: center;
       gap: 10px;
@@ -223,6 +257,41 @@
       line-height: 50px;
       font-weight: 800;
       font-variant-numeric: tabular-nums;
+    }
+
+    .mcq-options {
+      display: flex;
+      gap: 8px;
+    }
+
+    .mcq-btn {
+      width: 56px;
+      height: 50px;
+      border: 2px solid var(--line);
+      border-radius: 8px;
+      background: #fff;
+      color: var(--text);
+      font-size: 24px;
+      font-weight: 700;
+      cursor: pointer;
+      text-align: center;
+      line-height: 46px;
+      padding: 0;
+    }
+
+    .mcq-btn.selected {
+      border-color: var(--primary);
+      background: var(--soft);
+    }
+
+    .mcq-btn.correct {
+      border-color: var(--ok);
+      background: #f0fdf4;
+    }
+
+    .mcq-btn.wrong {
+      border-color: var(--bad);
+      background: #fef2f2;
     }
 
     .result {
@@ -289,6 +358,13 @@
         font-size: 24px;
         line-height: 46px;
       }
+
+      .mcq-btn {
+        width: 48px;
+        height: 44px;
+        font-size: 20px;
+        line-height: 40px;
+      }
     }
   </style>
 </head>
@@ -303,6 +379,20 @@
         <input id="count" type="number" min="1" max="60" value="12">
       </div>
 
+      <fieldset class="field">
+        <legend>Kiểu đề</legend>
+        <div class="segmented">
+          <label class="choice">
+            <input type="radio" name="mode" value="input" checked>
+            Tự nhập
+          </label>
+          <label class="choice">
+            <input type="radio" name="mode" value="mcq">
+            Trắc nghiệm
+          </label>
+        </div>
+      </fieldset>
+
       <div class="actions">
         <button class="primary" id="generateBtn" type="button">Tạo đề</button>
         <button class="secondary" id="gradeBtn" type="button">Chấm điểm</button>
@@ -314,11 +404,11 @@
     <main>
       <div class="topbar">
         <h2>Phép cộng 1 + 1 chữ số (kết quả &ge; 10)</h2>
-        <p class="hint">Nhập đáp án vào ô trống rồi bấm chấm điểm.</p>
+        <p class="hint" id="hintText">Nhập đáp án vào ô trống rồi bấm chấm điểm.</p>
       </div>
 
       <section id="problems" class="problems horizontal" aria-live="polite">
-        <div class="empty-state">Bấm “Tạo đề” để bắt đầu luyện tập.</div>
+        <div class="empty-state">Bấm "Tạo đề" để bắt đầu luyện tập.</div>
       </section>
     </main>
   </div>
@@ -329,6 +419,7 @@
     const gradeBtn = document.getElementById('gradeBtn');
     const problemsEl = document.getElementById('problems');
     const scoreBox = document.getElementById('scoreBox');
+    const hintText = document.getElementById('hintText');
 
     let problems = [];
 
@@ -336,53 +427,122 @@
       return Math.floor(Math.random() * (max - min + 1)) + min;
     }
 
-    function createProblem() {
-      const a = randomInt(1, 9);
-      const bMin = Math.max(1, 10 - a);
-      const b = randomInt(bMin, 9);
-      return {
-        first: a,
-        second: b,
-        operator: '+',
-        answer: a + b
-      };
+    function createProblem(prev) {
+      let a, b;
+      let attempts = 0;
+      do {
+        a = randomInt(1, 9);
+        b = randomInt(Math.max(1, 10 - a), 9);
+        attempts++;
+      } while (prev && a === prev.first && b === prev.second && attempts < 50);
+      return { first: a, second: b, operator: '+', answer: a + b };
+    }
+
+    function generateDistractors(correctAnswer) {
+      const distractors = new Set();
+      while (distractors.size < 2) {
+        const d = randomInt(10, 18);
+        if (d !== correctAnswer) {
+          distractors.add(d);
+        }
+      }
+      return [...distractors];
+    }
+
+    function shuffle(arr) {
+      for (let i = arr.length - 1; i > 0; i--) {
+        const j = randomInt(0, i);
+        [arr[i], arr[j]] = [arr[j], arr[i]];
+      }
+      return arr;
+    }
+
+    function getSelectedMode() {
+      return document.querySelector('input[name="mode"]:checked').value;
     }
 
     function renderProblems() {
+      const mode = getSelectedMode();
+
       if (problems.length === 0) {
         problemsEl.innerHTML = '<div class="empty-state">Bấm "Tạo đề" để bắt đầu luyện tập.</div>';
         return;
       }
 
-      problemsEl.innerHTML = problems.map((problem, index) => `
-        <article class="problem" data-index="${index}">
-          <div class="expression">
-            <span>${problem.first}</span>
-            <span>${problem.operator}</span>
-            <span>${problem.second}</span>
-            <span>=</span>
-          </div>
-          <input class="answer" type="number" inputmode="numeric" aria-label="Đáp án câu ${index + 1}">
-          <span class="result" aria-hidden="true"></span>
-        </article>
-      `).join('');
+      if (mode === 'input') {
+        hintText.textContent = 'Nhập đáp án vào ô trống rồi bấm chấm điểm.';
+        problemsEl.innerHTML = problems.map((problem, index) => `
+          <article class="problem" data-index="${index}">
+            <div class="expression">
+              <span>${problem.first}</span>
+              <span>${problem.operator}</span>
+              <span>${problem.second}</span>
+              <span>=</span>
+            </div>
+            <input class="answer" type="number" inputmode="numeric" aria-label="Đáp án câu ${index + 1}">
+            <span class="result" aria-hidden="true"></span>
+          </article>
+        `).join('');
+      } else {
+        hintText.textContent = 'Chọn đáp án đúng cho mỗi câu rồi bấm chấm điểm.';
+        problemsEl.innerHTML = problems.map((problem, index) => {
+          const distractors = generateDistractors(problem.answer);
+          const options = shuffle([problem.answer, ...distractors]);
+          return `
+            <article class="problem" data-index="${index}">
+              <div class="expression">
+                <span>${problem.first}</span>
+                <span>${problem.operator}</span>
+                <span>${problem.second}</span>
+                <span>=</span>
+              </div>
+              <div class="mcq-options" role="radiogroup" aria-label="Đáp án câu ${index + 1}">
+                ${options.map((val, oi) => `
+                  <button class="mcq-btn" type="button" data-value="${val}" role="radio" aria-checked="false">${val}</button>
+                `).join('')}
+              </div>
+              <span class="result" aria-hidden="true"></span>
+            </article>
+          `;
+        }).join('');
+
+        problemsEl.querySelectorAll('.mcq-options').forEach((group) => {
+          const btns = group.querySelectorAll('.mcq-btn');
+          btns.forEach((btn) => {
+            btn.addEventListener('click', () => {
+              btns.forEach((b) => {
+                b.classList.remove('selected');
+                b.setAttribute('aria-checked', 'false');
+              });
+              btn.classList.add('selected');
+              btn.setAttribute('aria-checked', 'true');
+            });
+          });
+        });
+      }
     }
 
     function generateProblems() {
       const count = Math.min(60, Math.max(1, Number(countEl.value) || 1));
       countEl.value = count;
 
-      problems = Array.from({ length: count }, createProblem);
+      problems = [];
+      for (let i = 0; i < count; i++) {
+        problems.push(createProblem(problems.length > 0 ? problems[problems.length - 1] : null));
+      }
+
       scoreBox.textContent = `Đã tạo ${count} câu.`;
       renderProblems();
 
-      const firstAnswer = problemsEl.querySelector('.answer');
-      if (firstAnswer) {
-        firstAnswer.focus();
+      const firstInput = problemsEl.querySelector('.answer, .mcq-btn');
+      if (firstInput) {
+        firstInput.focus();
       }
     }
 
     function gradeProblems() {
+      const mode = getSelectedMode();
+
       if (problems.length === 0) {
         scoreBox.textContent = 'Hãy bấm Tạo đề trước khi chấm điểm.';
         return;
@@ -393,11 +553,22 @@
 
       cards.forEach((card) => {
         const index = Number(card.dataset.index);
-        const input = card.querySelector('.answer');
         const result = card.querySelector('.result');
-        const value = Number(input.value);
-        const hasAnswer = input.value.trim() !== '';
-        const isCorrect = hasAnswer && value === problems[index].answer;
+        let isCorrect = false;
+
+        if (mode === 'input') {
+          const input = card.querySelector('.answer');
+          const value = Number(input.value);
+          const hasAnswer = input.value.trim() !== '';
+          isCorrect = hasAnswer && value === problems[index].answer;
+        } else {
+          const selected = card.querySelector('.mcq-btn.selected');
+          if (selected) {
+            isCorrect = Number(selected.dataset.value) === problems[index].answer;
+            selected.classList.toggle('correct', isCorrect);
+            selected.classList.toggle('wrong', !isCorrect);
+          }
+        }
 
         card.classList.toggle('correct', isCorrect);
         card.classList.toggle('wrong', !isCorrect);
