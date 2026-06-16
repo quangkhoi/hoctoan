@@ -1,0 +1,440 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bé Học Phép Cộng Gộp 10 Thần Kỳ 🍎</title>
+    <style>
+        :root {
+            --primary-color: #ff6b6b;
+            --secondary-color: #4ecdc4;
+            --bg-color: #f7f9fc;
+            --text-color: #2d3436;
+            --accent-color: #ffeaa7;
+        }
+
+        * {
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 800px;
+            width: 100%;
+            background: white;
+            padding: 30px;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+            text-align: center;
+        }
+
+        h1 {
+            color: #d63031;
+            font-size: 2rem;
+            margin-bottom: 10px;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.1);
+        }
+
+        .subtitle {
+            color: #636e72;
+            margin-bottom: 25px;
+            font-size: 1.1rem;
+        }
+
+        /* Bảng điều khiển nhập số */
+        .control-panel {
+            background: #f1f2f6;
+            padding: 15px 25px;
+            border-radius: 15px;
+            display: inline-flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+
+        input[type="number"] {
+            width: 70px;
+            height: 50px;
+            font-size: 1.5rem;
+            text-align: center;
+            border: 3px solid #b2bec3;
+            border-radius: 10px;
+            font-weight: bold;
+            color: #2d3436;
+            outline: none;
+            transition: border-color 0.3s;
+        }
+
+        input[type="number"]:focus {
+            border-color: var(--primary-color);
+        }
+
+        .math-sign {
+            font-size: 2rem;
+            font-weight: bold;
+            color: #2d3436;
+        }
+
+        button {
+            background: linear-gradient(135deg, #ff6b6b, #ee5253);
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            font-size: 1.2rem;
+            font-weight: bold;
+            border-radius: 10px;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(255, 107, 107, 0.4);
+            transition: all 0.2s ease;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(255, 107, 107, 0.6);
+        }
+
+        button:active {
+            transform: translateY(1px);
+        }
+
+        button:disabled {
+            background: #b2bec3;
+            box-shadow: none;
+            cursor: not-allowed;
+        }
+
+        /* Khung 10 ô */
+        .workspace {
+            display: flex;
+            justify-content: center;
+            gap: 40px;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+        }
+
+        .frame-wrapper {
+            background: #fdfdfd;
+            border: 3px dashed #dfe6e9;
+            padding: 15px;
+            border-radius: 15px;
+            position: relative;
+        }
+
+        .frame-title {
+            font-size: 1.1rem;
+            font-weight: bold;
+            margin-bottom: 10px;
+            color: #2d3436;
+        }
+
+        .ten-frame {
+            display: grid;
+            grid-template-columns: repeat(5, 60px);
+            grid-template-rows: repeat(2, 60px);
+            gap: 6px;
+            background-color: #dfe6e9;
+            padding: 8px;
+            border-radius: 10px;
+            border: 3px solid #b2bec3;
+            position: relative;
+            transition: all 0.5s ease;
+        }
+
+        .cell {
+            background-color: white;
+            border-radius: 8px;
+            border: 1px solid #b2bec3;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+        }
+
+        /* Quả táo và hiệu ứng bay */
+        .apple {
+            font-size: 2.2rem;
+            user-select: none;
+            z-index: 10;
+            display: inline-block;
+            transition: all 0.8s cubic-bezier(0.25, 1, 0.5, 1);
+        }
+
+        .apple.moving {
+            z-index: 999;
+            transform: scale(1.3);
+        }
+
+        /* Lời giảng giải */
+        .explanation-box {
+            background: var(--accent-color);
+            border-left: 6px solid #fdcb6e;
+            padding: 15px 20px;
+            border-radius: 8px;
+            text-align: left;
+            margin-top: 20px;
+            min-height: 80px;
+            font-size: 1.15rem;
+            line-height: 1.6;
+            transition: all 0.3s ease;
+            box-shadow: inset 0 2px 5px rgba(0,0,0,0.05);
+        }
+
+        .step-text {
+            margin: 5px 0;
+            opacity: 0;
+            transform: translateY(5px);
+            transition: all 0.5s ease;
+        }
+
+        .step-text.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        /* Công thức toán thời gian thực */
+        .formula-display {
+            font-size: 2.2rem;
+            font-weight: bold;
+            margin: 20px 0;
+            color: #2d3436;
+            min-height: 50px;
+        }
+
+        .highlight-red { color: #d63031; }
+        .highlight-green { color: #27ae60; }
+        .highlight-blue { color: #0984e3; font-size: 2.5rem; }
+
+        @media (max-width: 650px) {
+            .workspace { gap: 20px; }
+            .ten-frame {
+                grid-template-columns: repeat(5, 45px);
+                grid-template-rows: repeat(2, 45px);
+            }
+            .apple { font-size: 1.6rem; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <a href="index.html" style="display:inline-block;margin-bottom:12px;color:#0984e3;text-decoration:none;font-size:14px;font-weight:700;">&larr; Về trang chủ</a>
+        <h1>🍎 Phép Cộng Thần Kỳ: Tạo Nhóm 10 🍏</h1>
+        <div class="subtitle">Phương pháp tách số trực quan giúp bé học giỏi toán cộng qua 10!</div>
+
+        <div class="control-panel">
+            <input type="number" id="num1" value="7" min="1" max="9">
+            <span class="math-sign">+</span>
+            <input type="number" id="num2" value="5" min="1" max="9">
+            <button id="btn-start" onclick="runAdditionVisualizer()">Xem Phép Tính ✨</button>
+        </div>
+
+        <div class="formula-display" id="live-formula"></div>
+
+        <div class="workspace">
+            <div class="frame-wrapper">
+                <div class="frame-title">Khung 1: <span id="title-count-left" class="highlight-red">0</span> Quả Táo Đỏ</div>
+                <div id="frame-left" class="ten-frame"></div>
+            </div>
+            <div class="frame-wrapper">
+                <div class="frame-title">Khung 2: <span id="title-count-right" class="highlight-green">0</span> Quả Táo Xanh</div>
+                <div id="frame-right" class="ten-frame"></div>
+            </div>
+        </div>
+
+        <div class="explanation-box" id="explanation">
+            <div style="color: #b2bec3; text-align: center; padding-top: 10px;">Nhập số từ 1 đến 9 và bấm nút để bắt đầu nhé bé!</div>
+        </div>
+    </div>
+
+    <script>
+        const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
+
+        function genGrid(frameId, receiver) {
+            const frame = document.getElementById(frameId);
+            frame.innerHTML = '';
+            frame.style.borderColor = '#b2bec3';
+            frame.style.backgroundColor = '#dfe6e9';
+            for (let i = 0; i < 10; i++) {
+                const cell = document.createElement('div');
+                cell.className = 'cell';
+                cell.id = `${frameId}-cell-${i}`;
+                frame.appendChild(cell);
+            }
+        }
+
+        async function runAdditionVisualizer() {
+            const btn = document.getElementById('btn-start');
+            btn.disabled = true;
+
+            let n1 = parseInt(document.getElementById('num1').value);
+            let n2 = parseInt(document.getElementById('num2').value);
+
+            if (isNaN(n1) || n1 < 1 || n1 > 9 || isNaN(n2) || n2 < 1 || n2 > 9) {
+                alert("Bé ơi, hãy nhập các số từ 1 đến 9 nhé!");
+                btn.disabled = false;
+                return;
+            }
+
+            const expBox = document.getElementById('explanation');
+            const formula = document.getElementById('live-formula');
+            expBox.innerHTML = '';
+            formula.innerHTML = `<span class="highlight-red">${n1}</span> + <span class="highlight-green">${n2}</span> = ?`;
+
+            genGrid('frame-left');
+            genGrid('frame-right');
+
+            const bigger = Math.max(n1, n2);
+            const smaller = Math.min(n1, n2);
+            const need = 10 - bigger;
+            const rem = smaller - need;
+            const leftBigger = n1 >= n2;
+
+            // receiver = which frame gets filled to 10; donor = which frame donates apples
+            const recvId = leftBigger ? 'frame-left' : 'frame-right';
+            const recvTitle = leftBigger ? 'title-count-left' : 'title-count-right';
+            const donTitle = leftBigger ? 'title-count-right' : 'title-count-left';
+            const recvApple = leftBigger ? 'red' : 'green';
+            const donApple = leftBigger ? 'green' : 'red';
+            const recvEmoji = leftBigger ? '🍎' : '🍏';
+            const donEmoji = leftBigger ? '🍏' : '🍎';
+
+            // place apples
+            for (let i = 0; i < n1; i++) {
+                const cell = document.getElementById(`frame-left-cell-${i}`);
+                cell.innerHTML = `<span class="apple" id="apple-left-${i}">🍎</span>`;
+            }
+            for (let i = 0; i < n2; i++) {
+                const cell = document.getElementById(`frame-right-cell-${i}`);
+                cell.innerHTML = `<span class="apple" id="apple-right-${i}">🍏</span>`;
+            }
+
+            document.getElementById('title-count-left').innerText = n1;
+            document.getElementById('title-count-right').innerText = n2;
+
+            await sleep(800);
+
+            // CASE 1: sum <= 10
+            if (n1 + n2 <= 10) {
+                addStepText(expBox, `👉 Khung trái có <b>${n1}</b> 🍎, khung phải có <b>${n2}</b> 🍏.`);
+                await sleep(1200);
+                addStepText(expBox, `👉 Cùng đếm gộp tất cả táo lại nhé!`);
+
+                for (let i = 0; i < n2; i++) {
+                    const idx = n1 + i;
+                    const el = document.getElementById(`apple-right-${i}`);
+                    const cell = document.getElementById(`frame-left-cell-${idx}`);
+                    await moveApple(el, cell);
+                    document.getElementById('title-count-left').innerText = idx + 1;
+                    document.getElementById('title-count-right').innerText = n2 - (i + 1);
+                    await sleep(300);
+                }
+
+                formula.innerHTML = `<span class="highlight-red">${n1}</span> + <span class="highlight-green">${n2}</span> = <span class="highlight-blue">${n1 + n2}</span>`;
+                addStepText(expBox, `🎉 Có tất cả <b class="highlight-blue">${n1 + n2}</b> quả! Vậy <b>${n1} + ${n2} = ${n1 + n2}</b>.`);
+                btn.disabled = false;
+                return;
+            }
+
+            // CASE 2: sum > 10
+            const recvStart = leftBigger ? n1 : n2; // how many already in receiver
+            const donStart = leftBigger ? n2 : n1; // how many in donor
+
+            addStepText(expBox, leftBigger
+                ? `👉 Khung trái có <b class="highlight-red">${n1}</b> 🍎, cần thêm <b>${need}</b> để được 10.`
+                : `👉 Khung phải có <b class="highlight-green">${n2}</b> 🍏, cần thêm <b>${need}</b> để được 10.`);
+            await sleep(2500);
+
+            addStepText(expBox, leftBigger
+                ? `👉 Tách <b class="highlight-green">${n2}</b> 🍏 = <b>${need}</b> (sang gộp) + <b>${rem}</b> (còn lại).`
+                : `👉 Tách <b class="highlight-red">${n1}</b> 🍎 = <b>${need}</b> (sang gộp) + <b>${rem}</b> (còn lại).`);
+            formula.innerHTML = leftBigger
+                ? `<span class="highlight-red">${n1}</span> + <span class="highlight-green">(${need} + ${rem})</span> = ?`
+                : `<span class="highlight-green">${n2}</span> + <span class="highlight-red">(${need} + ${rem})</span> = ?`;
+            await sleep(2500);
+
+            // highlight moving apples
+            const donorList = [];
+            for (let i = 0; i < need; i++) {
+                const id = leftBigger ? `apple-right-${i}` : `apple-left-${i}`;
+                const el = document.getElementById(id);
+                if (el) { el.style.transform = 'scale(1.2)'; donorList.push(el); }
+            }
+            await sleep(1500);
+
+            addStepText(expBox, `🚀 Di chuyển <b>${need}</b> quả ${donEmoji} sang lấp đầy khung 10!`);
+
+            for (let i = 0; i < need; i++) {
+                const appleId = leftBigger ? `apple-right-${i}` : `apple-left-${i}`;
+                const targetId = leftBigger ? `frame-left-cell-${recvStart + i}` : `frame-right-cell-${recvStart + i}`;
+                const el = document.getElementById(appleId);
+                const cell = document.getElementById(targetId);
+                await moveApple(el, cell);
+                document.getElementById(recvTitle).innerText = recvStart + i + 1;
+                document.getElementById(donTitle).innerText = donStart - (i + 1);
+                await sleep(350);
+            }
+            await sleep(500);
+
+            // highlight the full 10-frame
+            const recvFrame = document.getElementById(recvId);
+            recvFrame.style.borderColor = '#27ae60';
+            recvFrame.style.backgroundColor = '#e8f8f5';
+
+            addStepText(expBox, `✨ Khung ${leftBigger ? 'trái' : 'phải'} đã đầy <b>10</b> quả!`);
+            formula.innerHTML = leftBigger
+                ? `<span class="highlight-red">10</span> + <span class="highlight-green">${rem}</span> = ?`
+                : `<span class="highlight-green">10</span> + <span class="highlight-red">${rem}</span> = ?`;
+            await sleep(2000);
+
+            addStepText(expBox, `👉 Còn lại <b>${rem}</b> quả ${donEmoji} ở khung ${leftBigger ? 'phải' : 'trái'}.`);
+            await sleep(1500);
+
+            addStepText(expBox, `🎉 <b>10 + ${rem} = ${n1 + n2}</b>! Vậy <b>${n1} + ${n2} = ${n1 + n2}</b>.`);
+            formula.innerHTML = `<span class="highlight-red">${n1}</span> + <span class="highlight-green">${n2}</span> = <span class="highlight-blue">${n1 + n2}</span>`;
+            btn.disabled = false;
+        }
+
+        function addStepText(container, text) {
+            const p = document.createElement('p');
+            p.className = 'step-text';
+            p.innerHTML = text;
+            container.appendChild(p);
+            setTimeout(() => p.classList.add('show'), 50);
+            container.scrollTop = container.scrollHeight;
+        }
+
+        function moveApple(el, targetCell) {
+            return new Promise((resolve) => {
+                if (!el || !targetCell) { resolve(); return; }
+
+                const start = el.getBoundingClientRect();
+                const end = targetCell.getBoundingClientRect();
+                const dx = end.left - start.left + (targetCell.offsetWidth / 2 - el.offsetWidth / 2);
+                const dy = end.top - start.top + (targetCell.offsetHeight / 2 - el.offsetHeight / 2);
+
+                el.classList.add('moving');
+                el.style.transform = `translate(${dx}px, ${dy}px) scale(1.2)`;
+
+                el.addEventListener('transitionend', function handler() {
+                    el.removeEventListener('transitionend', handler);
+                    el.classList.remove('moving');
+                    el.style.transform = 'none';
+                    targetCell.appendChild(el);
+                    resolve();
+                });
+            });
+        }
+    </script>
+</body>
+</html>

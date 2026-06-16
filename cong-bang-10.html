@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bé Học Các Cặp Số Cộng Lại Bằng 10</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #fbc2eb 0%, #a6c1ee 100%);
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            color: #333;
+        }
+
+        h1 {
+            color: #ff4757;
+            text-shadow: 2px 2px #fff;
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            text-align: center;
+        }
+
+        .subtitle {
+            font-size: 1.2rem;
+            color: #4b4b4b;
+            margin-bottom: 30px;
+            background: rgba(255, 255, 255, 0.7);
+            padding: 5px 15px;
+            border-radius: 20px;
+        }
+
+        /* Khung chứa các nút bấm */
+        .button-container {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+            justify-content: center;
+            max-width: 800px;
+            margin-bottom: 40px;
+        }
+
+        .pair-btn {
+            background-color: white;
+            border: 3px solid #ffa502;
+            border-radius: 15px;
+            padding: 15px 25px;
+            font-size: 1.5rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+
+        .pair-btn:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.15);
+            background-color: #ffeaa7;
+        }
+
+        .pair-btn.active {
+            background-color: #ff7f50;
+            color: white;
+            border-color: #ff6b81;
+            transform: scale(1.05);
+        }
+
+        /* Khung hiển thị trực quan */
+        .display-container {
+            background: white;
+            padding: 30px;
+            border-radius: 25px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            width: 90%;
+            max-width: 600px;
+            text-align: center;
+            display: none; /* Ẩn lúc đầu, hiện khi bấm số */
+            animation: fadeIn 0.5s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .equation {
+            font-size: 3.5rem;
+            font-weight: bold;
+            margin-bottom: 25px;
+            color: #2ed573;
+        }
+
+        .num1 { color: #ff4757; }
+        .num2 { color: #1e90ff; }
+
+        /* Các khối tròn minh họa */
+        .visual-box {
+            display: flex;
+            justify-content: center;
+            gap: 8px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .circle {
+            width: 45px;
+            height: 45px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            font-size: 1.2rem;
+            animation: bounce 0.5s ease-in-out;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-15px); }
+        }
+
+        .circle.group1 { background-color: #ff4757; }
+        .circle.group2 { background-color: #1e90ff; }
+
+        .celebration {
+            font-size: 1.3rem;
+            color: #ffa502;
+            font-weight: bold;
+            margin-top: 15px;
+            height: 30px;
+        }
+    </style>
+</head>
+<body>
+
+    <a href="index.html" style="display:inline-block;margin-bottom:10px;color:#0984e3;text-decoration:none;font-size:14px;font-weight:700;">&larr; Về trang chủ</a>
+    <h1>🌈 Cầu Vồng Toán Học 🌈</h1>
+    <div class="subtitle">Bé hãy chọn một cặp số xem điều kỳ diệu nhé!</div>
+
+    <div class="button-container">
+        <button class="pair-btn" onclick="showPair(0, 10, this)">0 + 10</button>
+        <button class="pair-btn" onclick="showPair(1, 9, this)">1 + 9</button>
+        <button class="pair-btn" onclick="showPair(2, 8, this)">2 + 8</button>
+        <button class="pair-btn" onclick="showPair(3, 7, this)">3 + 7</button>
+        <button class="pair-btn" onclick="showPair(4, 6, this)">4 + 6</button>
+        <button class="pair-btn" onclick="showPair(5, 5, this)">5 + 5</button>
+        <button class="pair-btn" onclick="showPair(6, 4, this)">6 + 4</button>
+        <button class="pair-btn" onclick="showPair(7, 3, this)">7 + 3</button>
+        <button class="pair-btn" onclick="showPair(8, 2, this)">8 + 2</button>
+        <button class="pair-btn" onclick="showPair(9, 1, this)">9 + 1</button>
+        <button class="pair-btn" onclick="showPair(10, 0, this)">10 + 0</button>
+    </div>
+
+    <div class="display-container" id="displayBox">
+        <div class="equation">
+            <span class="num1" id="textN1">0</span> 
+            <span style="color: #57606f;">+</span> 
+            <span class="num2" id="textN2">10</span> 
+            <span style="color: #57606f;">=</span> 
+            <span style="color: #2ed573;">10</span>
+        </div>
+
+        <div class="visual-box" id="visualBox"></div>
+
+        <div class="celebration" id="cheerText"></div>
+    </div>
+
+    <script>
+        const lờiKhen = [
+            "Xuất sắc quá bé ơi! 🎉",
+            "Đúng rồi, bé giỏi lắm! ❤️",
+            "Cặp số này thật kỳ diệu! ✨",
+            "Bé siêu đỉnh luôn! 🌟",
+            "Hoan hô! Thêm một cặp bằng 10! 🥳"
+        ];
+
+        function showPair(n1, n2, btn) {
+            // Xóa trạng thái active của các nút cũ
+            document.querySelectorAll('.pair-btn').forEach(b => b.classList.remove('active'));
+            // Thêm active cho nút vừa bấm
+            btn.classList.add('active');
+
+            // Hiển thị khung kết quả
+            const displayBox = document.getElementById('displayBox');
+            displayBox.style.display = 'block';
+
+            // Cập nhật số trên phép tính
+            document.getElementById('textN1').innerText = n1;
+            document.getElementById('textN2').innerText = n2;
+
+            // Vẽ các khối tròn màu sắc minh họa
+            const visualBox = document.getElementById('visualBox');
+            visualBox.innerHTML = ''; // Xóa hình cũ đi
+
+            // Tạo bóng cho số thứ nhất (Màu Đỏ)
+            for(let i = 1; i <= n1; i++) {
+                const circle = document.createElement('div');
+                circle.className = 'circle group1';
+                circle.innerText = i;
+                // Tạo hiệu ứng trễ (delay) để các quả bóng nhảy lên lần lượt nhìn cho vui mắt
+                circle.style.animationDelay = `${i * 0.05}s`;
+                visualBox.appendChild(circle);
+            }
+
+            // Tạo bóng cho số thứ hai (Màu Xanh Dương)
+            for(let j = 1; j <= n2; j++) {
+                const circle = document.createElement('div');
+                circle.className = 'circle group2';
+                circle.innerText = j;
+                circle.style.animationDelay = `${(n1 + j) * 0.05}s`;
+                visualBox.appendChild(circle);
+            }
+
+            // Hiển thị lời khen ngẫu nhiên để khích lệ bé
+            const ngauNhien = Math.floor(Math.random() * lờiKhen.length);
+            document.getElementById('cheerText').innerText = lờiKhen[ngauNhien];
+        }
+    </script>
+</body>
+</html>
