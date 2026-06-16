@@ -42,15 +42,26 @@
     }
 
     .lead {
-      margin: 0 0 28px;
+      margin: 0 0 32px;
       color: var(--muted);
       font-size: 18px;
     }
 
+    .section-title {
+      margin: 0 0 16px;
+      font-size: 20px;
+      color: var(--text);
+    }
+
+    .sections {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 32px;
+    }
+
     .study-link {
       display: block;
-      max-width: 420px;
-      padding: 22px;
+      padding: 20px;
       border: 1px solid var(--line);
       border-radius: 8px;
       background: var(--panel);
@@ -59,20 +70,42 @@
       box-shadow: var(--shadow);
     }
 
+    .study-link + .study-link {
+      margin-top: 12px;
+    }
+
     .study-link:hover {
       border-color: var(--primary);
     }
 
     .study-link strong {
       display: block;
-      margin-bottom: 8px;
+      margin-bottom: 6px;
       color: var(--primary-dark);
-      font-size: 22px;
+      font-size: 20px;
     }
 
     .study-link span {
       color: var(--muted);
       line-height: 1.5;
+    }
+
+    .badge {
+      display: inline-block;
+      padding: 1px 8px;
+      border-radius: 10px;
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+    .badge.demo {
+      background: #e0f2fe;
+      color: #0369a1;
+    }
+
+    .badge.practice {
+      background: #fef3c7;
+      color: #92400e;
     }
   </style>
 </head>
@@ -81,25 +114,35 @@
     <h1>Hỗ trợ học tập</h1>
     <p class="lead">Chọn nội dung luyện tập bên dưới.</p>
 
-    <a class="study-link" href="gop-10.html">
-      <strong>Gộp 10 — Cộng có nhớ</strong>
-      <span>Nhập hai số, xem minh họa tách-gộp bằng ô vuông và cách làm tròn 10.</span>
-    </a>
+    <div class="sections">
+      <div class="section">
+        <div class="section-title">📖 Minh họa trực quan</div>
 
-    <a class="study-link" href="cong-bang-10.html">
-      <strong>Minh họa cộng bằng 10</strong>
-      <span>Trực quan ghép số — mỗi cột là một cặp số có tổng bằng 10.</span>
-    </a>
+        <a class="study-link" href="gop-10.html">
+          <strong>Gộp 10 — Cộng có nhớ <span class="badge demo">minh họa</span></strong>
+          <span>Nhập hai số (1–9), xem trực quan cách tách số nhỏ hơn ghép với số lớn hơn tạo thành 10, phần còn lại là kết quả.</span>
+        </a>
 
-    <a class="study-link" href="cong-qua-10.html">
-      <strong>Cộng qua 10</strong>
-      <span>Cộng 1 chữ số với 1 chữ số, kết quả luôn lớn hơn hoặc bằng 10.</span>
-    </a>
+        <a class="study-link" href="cong-bang-10.html">
+          <strong>Các cặp số cộng bằng 10 <span class="badge demo">minh họa</span></strong>
+          <span>Tương tác 11 cột ghép số — mỗi cột là một cặp (0+10, 1+9, …, 10+0). Bấm để xem ô vuông hai hàng chập lại thành 10.</span>
+        </a>
+      </div>
 
-    <a class="study-link" href="cong-tru-2-chu-so.html">
-      <strong>Cộng trừ 2 chữ số</strong>
-      <span>Tạo đề và chấm điểm các phép toán cộng trừ trong phạm vi 2 chữ số.</span>
-    </a>
+      <div class="section">
+        <div class="section-title">✏️ Luyện tập</div>
+
+        <a class="study-link" href="cong-qua-10.html">
+          <strong>Cộng qua 10 <span class="badge practice">luyện tập</span></strong>
+          <span>Luyện cộng 1 chữ số + 1 chữ số sao cho kết quả luôn &ge; 10. Hỗ trợ tự nhập đáp án hoặc trắc nghiệm 3 lựa chọn.</span>
+        </a>
+
+        <a class="study-link" href="cong-tru-2-chu-so.html">
+          <strong>Cộng trừ 2 chữ số <span class="badge practice">luyện tập</span></strong>
+          <span>Tạo đề và chấm điểm các phép cộng/trừ trong phạm vi 2–3 chữ số. Hiển thị hàng dọc hoặc hàng ngang.</span>
+        </a>
+      </div>
+    </div>
   </main>
 </body>
 </html>
