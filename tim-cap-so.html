@@ -1,0 +1,544 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Game Tìm Cặp Số Vui Nhộn</title>
+    <style>
+        :root {
+            --bg-color: #f0fdf4;
+            --primary-color: #4ade80;
+            --secondary-color: #fef08a;
+            --accent-color: #f472b6;
+            --text-color: #1e293b;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            user-select: none;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            display: flex;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        /* --- CẠNH TRÁI: PANEL ĐIỀU KHIỂN --- */
+        #control-panel {
+            width: 320px;
+            background: linear-gradient(135deg, #ffffff, #f0fdf4);
+            border-right: 4px dashed #bbf7d0;
+            padding: 25px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            box-shadow: 5px 0 15px rgba(0,0,0,0.05);
+            z-index: 10;
+        }
+
+        .back-link {
+            display: inline-block;
+            align-self: flex-start;
+            padding: 10px 16px;
+            border-radius: 999px;
+            background: #dcfce7;
+            color: #15803d;
+            font-weight: bold;
+            text-decoration: none;
+            box-shadow: 0 4px 10px rgba(21, 128, 61, 0.12);
+            transition: transform 0.15s ease, box-shadow 0.15s ease, background-color 0.15s ease;
+        }
+
+        .back-link:hover {
+            background: #bbf7d0;
+            transform: translateY(-1px);
+            box-shadow: 0 6px 14px rgba(21, 128, 61, 0.18);
+        }
+
+        h2 {
+            text-align: center;
+            color: #16a34a;
+            font-size: 24px;
+            margin-bottom: 10px;
+            text-shadow: 1px 1px 0px #fff;
+        }
+
+        .setting-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        label {
+            font-weight: bold;
+            color: #334155;
+            font-size: 15px;
+        }
+
+        input[type="number"], select {
+            padding: 10px;
+            border: 2px solid #cbd5e1;
+            border-radius: 12px;
+            font-size: 16px;
+            outline: none;
+            transition: all 0.3s;
+            background-color: #fff;
+        }
+
+        input:focus, select:focus {
+            border-color: #4ade80;
+            box-shadow: 0 0 0 3px rgba(74, 222, 128, 0.2);
+        }
+
+        #btn-start {
+            margin-top: auto;
+            padding: 15px;
+            background: linear-gradient(to bottom, #4ade80, #22c55e);
+            color: white;
+            border: none;
+            border-radius: 16px;
+            font-size: 20px;
+            font-weight: bold;
+            cursor: pointer;
+            box-shadow: 0 6px 0 #15803d, 0 8px 15px rgba(0,0,0,0.1);
+            transition: all 0.1s;
+        }
+
+        #btn-start:active {
+            transform: translateY(4px);
+            box-shadow: 0 2px 0 #15803d, 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        /* --- MÀN HÌNH CHÍNH --- */
+        #main-screen {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            padding: 20px;
+            position: relative;
+        }
+
+        /* Thanh tiến độ thời gian */
+        #progress-container {
+            width: 80%;
+            max-width: 600px;
+            height: 25px;
+            background-color: #e2e8f0;
+            border-radius: 20px;
+            margin: 0 auto 20px auto;
+            overflow: hidden;
+            border: 3px solid #cbd5e1;
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        #progress-bar {
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(to right, #f43f5e, #e11d48);
+            border-radius: 20px;
+            transition: width 1s linear;
+        }
+
+        /* Vùng chơi game */
+        #game-board {
+            flex: 1;
+            background-color: #ffffff;
+            border-radius: 24px;
+            border: 4px dashed #cbd5e1;
+            position: relative;
+            overflow: hidden;
+            box-shadow: inset 0 4px 12px rgba(0,0,0,0.03);
+        }
+
+        /* Bong bóng số */
+        .number-bubble {
+            position: absolute;
+            width: 65px;
+            height: 65px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 26px;
+            font-weight: bold;
+            color: white;
+            cursor: grab;
+            box-shadow: 0 6px 12px rgba(0,0,0,0.15), inset 0 -4px 8px rgba(0,0,0,0.2);
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.3);
+            transform: translate(-50%, -50%);
+            transition: transform 0.1s ease;
+        }
+
+        .number-bubble:active {
+            cursor: grabbing;
+        }
+
+        /* Trạng thái được chọn */
+        .number-bubble.selected {
+            transform: translate(-50%, -50%) scale(1.2);
+            border: 4px solid #ffffff;
+            box-shadow: 0 0 20px #ef4444, inset 0 -4px 8px rgba(0,0,0,0.2);
+            animation: pulse 0.5s infinite alternate;
+        }
+
+        @keyframes pulse {
+            from { transform: translate(-50%, -50%) scale(1.15); }
+            to { transform: translate(-50%, -50%) scale(1.25); }
+        }
+
+        /* Hiệu ứng đốt cháy biến mất */
+        .burning {
+            animation: burnAway 0.6s forwards;
+            pointer-events: none;
+        }
+
+        @keyframes burnAway {
+            0% { transform: translate(-50%, -50%) scale(1.2); background: #f97316 !important; }
+            50% { transform: translate(-50%, -50%) scale(1.5); background: #ef4444 !important; opacity: 0.8; box-shadow: 0 0 30px #f97316;}
+            100% { transform: translate(-50%, -50%) scale(0); opacity: 0; }
+        }
+
+        /* --- MÀN HÌNH THÔNG BÁO KẾT QUẢ --- */
+        .overlay {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background-color: rgba(0,0,0,0.6);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 100;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.4s ease;
+            border-radius: 24px;
+        }
+
+        .overlay.show {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .message-box {
+            background-color: white;
+            padding: 40px 60px;
+            border-radius: 30px;
+            text-align: center;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+            transform: scale(0.7);
+            transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        .overlay.show .message-box {
+            transform: scale(1);
+        }
+
+        .message-box h1 {
+            font-size: 48px;
+            margin-bottom: 20px;
+        }
+
+        .message-box p {
+            font-size: 20px;
+            color: #64748b;
+        }
+
+        .win h1 { color: #22c55e; text-shadow: 2px 2px 0 #bbf7d0; }
+        .lose h1 { color: #ef4444; text-shadow: 2px 2px 0 #fecdd3; }
+    </style>
+</head>
+<body>
+
+    <!-- PANEL CẠNH TRÁI -->
+    <div id="control-panel">
+        <a class="back-link" href="index.html">← Quay lại trang chủ</a>
+        <h2>Toán Học Vui Nhộn</h2>
+        <hr style="border: 1px dashed #bbf7d0;">
+        
+        <div class="setting-group">
+            <label for="target-sum">Tổng cần tìm:</label>
+            <input type="number" id="target-sum" value="10" min="1">
+        </div>
+
+        <div class="setting-group">
+            <label for="difficulty">Độ khó:</label>
+            <select id="difficulty">
+                <option value="1">Độ khó 1 (6s / cặp)</option>
+                <option value="2">Độ khó 2 (5s / cặp)</option>
+                <option value="3">Độ khó 3 (4s / cặp)</option>
+            </select>
+        </div>
+
+        <div class="setting-group">
+            <label for="pair-count">Số lượng cặp số (Tối thiểu 10):</label>
+            <input type="number" id="pair-count" value="10" min="10">
+        </div>
+
+        <button id="btn-start">BẮT ĐẦU CHƠI 🎉</button>
+    </div>
+
+    <!-- MÀN HÌNH CHÍNH -->
+    <div id="main-screen">
+        <!-- Thanh tiến độ thời gian -->
+        <div id="progress-container">
+            <div id="progress-bar"></div>
+        </div>
+
+        <!-- Board chơi game -->
+        <div id="game-board">
+            <!-- Các số sẽ được sinh ra ở đây bằng Javascript -->
+            
+            <!-- Overlay kết quả nằm bên trong board để không đè lên thanh điều khiển -->
+            <div id="result-overlay" class="overlay">
+                <div class="message-box" id="message-box">
+                    <h1 id="result-title">CHIẾN THẮNG!</h1>
+                    <p id="result-desc">Bé giỏi quá, chạm vào nút Bắt đầu để chơi lại nhé!</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const board = document.getElementById('game-board');
+        const btnStart = document.getElementById('btn-start');
+        const progressBar = document.getElementById('progress-bar');
+        const overlay = document.getElementById('result-overlay');
+        const messageBox = document.getElementById('message-box');
+        const resultTitle = document.getElementById('result-title');
+        const resultDesc = document.getElementById('result-desc');
+
+        // Màu sắc tươi sáng ngẫu nhiên cho các bong bóng số
+        const bubbleColors = ['#f472b6', '#38bdf8', '#fbbf24', '#a78bfa', '#fb7185', '#2dd4bf', '#818cf8'];
+
+        let gameInterval = null;
+        let totalTime = 0;
+        let timeLeft = 0;
+        let selectedBubble = null;
+        let isDragging = false;
+        let currentDraggedBubble = null;
+        let activePairsCount = 0;
+        let isGameRunning = false;
+
+        // Bắt đầu trò chơi
+        btnStart.addEventListener('click', initGame);
+
+        function initGame() {
+            // Xóa game cũ nếu có
+            clearInterval(gameInterval);
+            board.querySelectorAll('.number-bubble').forEach(b => b.remove());
+            overlay.classList.remove('show');
+            selectedBubble = null;
+            isGameRunning = true;
+
+            // Lấy cấu hình từ UI
+            const targetSum = parseInt(document.getElementById('target-sum').value) || 10;
+            const difficulty = parseInt(document.getElementById('difficulty').value);
+            let pairCount = parseInt(document.getElementById('pair-count').value);
+            if (pairCount < 10) pairCount = 10;
+
+            activePairsCount = pairCount;
+
+            // Tính toán thời gian dựa trên độ khó
+            let timePerPair = 6;
+            if (difficulty === 2) timePerPair = 5;
+            if (difficulty === 3) timePerPair = 4;
+
+            totalTime = pairCount * timePerPair;
+            timeLeft = totalTime;
+            updateProgressBar();
+
+            // Tạo danh sách các số ngẫu nhiên có tổng bằng targetSum
+            let numbers = [];
+            for (let i = 0; i < pairCount; i++) {
+                // Tạo ngẫu nhiên số thứ nhất từ 0 đến targetSum
+                const num1 = Math.floor(Math.random() * (targetSum + 1));
+                const num2 = targetSum - num1;
+                numbers.push(num1, num2);
+            }
+
+            // Trộn lẫn các số (Shuffle)
+            numbers.sort(() => Math.random() - 0.5);
+
+            // Sinh các bong bóng số lên Board
+            numbers.forEach(num => {
+                createBubble(num);
+            });
+
+            // Kích hoạt đồng hồ đếm ngược từng giây
+            gameInterval = setInterval(() => {
+                timeLeft--;
+                updateProgressBar();
+                if (timeLeft <= 0) {
+                    endGame(false);
+                }
+            }, 1000);
+        }
+
+        // Tạo phần tử bong bóng số và thiết lập kéo thả/click
+        function createBubble(num) {
+            const bubble = document.createElement('div');
+            bubble.classList.add('number-bubble');
+            bubble.textContent = num;
+            
+            // Màu ngẫu nhiên
+            bubble.style.backgroundColor = bubbleColors[Math.floor(Math.random() * bubbleColors.length)];
+
+            // Vị trí random trên board (Trừ đi kích thước bong bóng để không bị tràn viền)
+            const boardWidth = board.clientWidth;
+            const boardHeight = board.clientHeight;
+            const posX = Math.floor(Math.random() * (boardWidth - 80)) + 40;
+            const posY = Math.floor(Math.random() * (boardHeight - 80)) + 40;
+
+            bubble.style.left = `${posX}px`;
+            bubble.style.top = `${posY}px`;
+
+            // ---- XỬ LÝ SỰ KIỆN CHUỘT / KÉO THẢ ----
+            let offsetX = 0;
+            let offsetY = 0;
+            let hasMoved = false; // Phân biệt giữa Click chọn và Kéo thả di chuyển
+
+            bubble.addEventListener('mousedown', (e) => {
+                if(!isGameRunning) return;
+                isDragging = true;
+                hasMoved = false;
+                currentDraggedBubble = bubble;
+                
+                // Đưa bong bóng đang tương tác lên trên cùng lớp hiển thị
+                board.appendChild(bubble);
+
+                // Tính toán khoảng cách từ chuột tới tâm bóng
+                const rect = bubble.getBoundingClientRect();
+                const boardRect = board.getBoundingClientRect();
+                
+                offsetX = e.clientX - rect.left - rect.width/2;
+                offsetY = e.clientY - rect.top - rect.height/2;
+            });
+
+            // Đăng ký sự kiện di chuyển chuột trên toàn màn hình để mượt mà hơn
+            window.addEventListener('mousemove', (e) => {
+                if (!isDragging || currentDraggedBubble !== bubble) return;
+                hasMoved = true;
+
+                const boardRect = board.getBoundingClientRect();
+                
+                // Vị trí mới của tâm bóng đối với board
+                let newX = e.clientX - boardRect.left - offsetX;
+                let newY = e.clientY - boardRect.top - offsetY;
+
+                // Giới hạn trong phạm vi Board
+                const radius = 32.5; // 65px / 2
+                if (newX < radius) newX = radius;
+                if (newX > boardRect.width - radius) newX = boardRect.width - radius;
+                if (newY < radius) newY = radius;
+                if (newY > boardRect.height - radius) newY = boardRect.height - radius;
+
+                bubble.style.left = `${newX}px`;
+                bubble.style.top = `${newY}px`;
+            });
+
+            window.addEventListener('mouseup', (e) => {
+                if (currentDraggedBubble !== bubble) return;
+                isDragging = false;
+                currentDraggedBubble = null;
+
+                // Nếu chỉ là click chuột chứ không kéo đi xa, thực hiện chọn số
+                if (!hasMoved) {
+                    handleSelectBubble(bubble);
+                }
+            });
+
+            board.appendChild(bubble);
+        }
+
+        // Xử lý logic khi người chơi click chọn bóng số
+        function handleSelectBubble(bubble) {
+            const targetSum = parseInt(document.getElementById('target-sum').value) || 10;
+
+            // Nếu click lại chính nó thì bỏ chọn
+            if (selectedBubble === bubble) {
+                bubble.classList.remove('selected');
+                selectedBubble = null;
+                return;
+            }
+
+            // Nếu chưa có số nào được chọn trước đó
+            if (!selectedBubble) {
+                selectedBubble = bubble;
+                bubble.classList.add('selected');
+            } else {
+                // Đã có số thứ 1, tiến hành so sánh với số thứ 2 vừa chọn
+                const val1 = parseInt(selectedBubble.textContent);
+                const val2 = parseInt(bubble.textContent);
+
+                if (val1 + val2 === targetSum) {
+                    // ĐÚNG: Hiệu ứng đốt cháy biến mất
+                    selectedBubble.classList.remove('selected');
+                    selectedBubble.classList.add('burning');
+                    bubble.classList.add('burning');
+
+                    const b1 = selectedBubble;
+                    const b2 = bubble;
+                    setTimeout(() => {
+                        b1.remove();
+                        b2.remove();
+                    }, 600);
+
+                    activePairsCount--;
+                    if (activePairsCount === 0) {
+                        endGame(true);
+                    }
+                } else {
+                    // SAI: Bỏ chọn và bay ngẫu nhiên đi chỗ khác
+                    selectedBubble.classList.remove('selected');
+                    
+                    [selectedBubble, bubble].forEach(b => {
+                        const boardWidth = board.clientWidth;
+                        const boardHeight = board.clientHeight;
+                        const newX = Math.floor(Math.random() * (boardWidth - 80)) + 40;
+                        const newY = Math.floor(Math.random() * (boardHeight - 80)) + 40;
+                        
+                        // Tạo hiệu ứng di chuyển mượt khi đổi chỗ ngẫu nhiên
+                        b.style.transition = "left 0.5s ease, top 0.5s ease";
+                        b.style.left = `${newX}px`;
+                        b.style.top = `${newY}px`;
+                        
+                        // Xóa thuộc tính transition sau khi bay xong để không ảnh hưởng kéo thả
+                        setTimeout(() => {
+                            b.style.transition = "transform 0.1s ease";
+                        }, 500);
+                    });
+                }
+                selectedBubble = null;
+            }
+        }
+
+        // Cập nhật giao diện thanh tiến độ thời gian
+        function updateProgressBar() {
+            const percentage = (timeLeft / totalTime) * 100;
+            progressBar.style.width = `${percentage}%`;
+        }
+
+        // Kết thúc trò chơi (Thắng / Thua)
+        function endGame(isWin) {
+            clearInterval(gameInterval);
+            isGameRunning = false;
+
+            if (isWin) {
+                messageBox.className = "message-box win";
+                resultTitle.textContent = "THẮNG RỒI! 🎉";
+                resultDesc.textContent = "Bé thông minh quá, đã tìm hết các cặp số rồi!";
+            } else {
+                messageBox.className = "message-box lose";
+                resultTitle.textContent = "HẾT GIỜ MẤT RỒI! ⏰";
+                resultDesc.textContent = "Không sao cả, bé nhấn nút Bắt đầu để thử lại nhé!";
+            }
+            overlay.classList.add('show');
+        }
+    </script>
+</body>
+</html>
