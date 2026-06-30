@@ -52,15 +52,47 @@
             font-size: 1.1rem;
         }
 
+        .main-layout {
+            display: flex;
+            align-items: flex-start;
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        .side-panel {
+            width: 320px;
+            flex-shrink: 0;
+        }
+
+        .content-panel {
+            flex: 1;
+            min-width: 0;
+        }
+
         /* Bảng điều khiển nhập số */
         .control-panel {
             background: #f1f2f6;
-            padding: 15px 25px;
+            padding: 16px 20px;
             border-radius: 15px;
-            display: inline-flex;
-            align-items: center;
+            display: flex;
+            flex-direction: column;
+            align-items: stretch;
             gap: 15px;
-            margin-bottom: 30px;
+            margin-bottom: 20px;
+            text-align: left;
+        }
+
+        .input-row,
+        .button-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .input-row {
+            flex-wrap: nowrap;
+            justify-content: center;
         }
 
         input[type="number"] {
@@ -112,6 +144,15 @@
             background: #b2bec3;
             box-shadow: none;
             cursor: not-allowed;
+        }
+
+        #btn-reset {
+            background: linear-gradient(135deg, #74b9ff, #0984e3);
+            box-shadow: 0 4px 15px rgba(9, 132, 227, 0.35);
+        }
+
+        #btn-reset:hover {
+            box-shadow: 0 6px 20px rgba(9, 132, 227, 0.5);
         }
 
         /* Khung 10 ô */
@@ -216,6 +257,12 @@
         .highlight-blue { color: #0984e3; font-size: 2.5rem; }
 
         @media (max-width: 650px) {
+            .main-layout {
+                flex-direction: column;
+            }
+            .side-panel {
+                width: 100%;
+            }
             .workspace { gap: 20px; }
             .ten-frame {
                 grid-template-columns: repeat(5, 45px);
@@ -232,14 +279,25 @@
         <h1>🍎 Phép Cộng Thần Kỳ: Tạo Nhóm 10 🍏</h1>
         <div class="subtitle">Phương pháp tách số trực quan giúp bé học giỏi toán cộng qua 10!</div>
 
-        <div class="control-panel">
-            <input type="number" id="num1" value="7" min="1" max="9">
-            <span class="math-sign">+</span>
-            <input type="number" id="num2" value="5" min="1" max="9">
-            <button id="btn-start" onclick="runAdditionVisualizer()">Xem Phép Tính ✨</button>
-        </div>
-
-        <div class="formula-display" id="live-formula"></div>
+        <div class="main-layout">
+            <div class="side-panel">
+                <div class="control-panel">
+                    <div class="input-row">
+                        <input type="number" id="num1" value="7" min="1" max="9">
+                        <span class="math-sign">+</span>
+                        <input type="number" id="num2" value="5" min="1" max="9">
+                    </div>
+                    <div class="button-row">
+                        <button id="btn-start" onclick="runAdditionVisualizer()">Xem Phép Tính ✨</button>
+                        <button id="btn-reset" type="button" onclick="resetVisualizer()">Reset</button>
+                    </div>
+                </div>
+                <div class="explanation-box" id="explanation">
+                    <div style="color: #b2bec3; text-align: center; padding-top: 10px;">Nhập số từ 1 đến 9 và bấm nút để bắt đầu nhé bé!</div>
+                </div>
+            </div>
+            <div class="content-panel">
+                <div class="formula-display" id="live-formula"></div>
 
         <div class="workspace">
             <div class="frame-wrapper">
@@ -252,13 +310,25 @@
             </div>
         </div>
 
-        <div class="explanation-box" id="explanation">
-            <div style="color: #b2bec3; text-align: center; padding-top: 10px;">Nhập số từ 1 đến 9 và bấm nút để bắt đầu nhé bé!</div>
+            </div>
         </div>
     </div>
 
     <script>
         const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
+        const defaultExplanation = '<div style="color: #b2bec3; text-align: center; padding-top: 10px;">Nhập số từ 1 đến 9 và bấm nút để bắt đầu nhé bé!</div>';
+
+        function resetVisualizer() {
+            document.getElementById('btn-start').disabled = false;
+            document.getElementById('num1').value = 7;
+            document.getElementById('num2').value = 5;
+            document.getElementById('title-count-left').innerText = 0;
+            document.getElementById('title-count-right').innerText = 0;
+            document.getElementById('live-formula').innerHTML = '';
+            document.getElementById('explanation').innerHTML = defaultExplanation;
+            genGrid('frame-left');
+            genGrid('frame-right');
+        }
 
         function genGrid(frameId, receiver) {
             const frame = document.getElementById(frameId);
@@ -435,6 +505,8 @@
                 });
             });
         }
+
+        resetVisualizer();
     </script>
 </body>
 </html>
