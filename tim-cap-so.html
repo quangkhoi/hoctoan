@@ -326,13 +326,44 @@
 
         // Bắt đầu trò chơi
         btnStart.addEventListener('click', initGame);
+        board.addEventListener('contextmenu', (event) => event.preventDefault());
+        board.addEventListener('mousedown', (event) => {
+            if (event.target === board && (event.button === 0 || event.button === 2)) clearSelection();
+        });
+
+        function clearSelection() {
+            if (selectedBubble) selectedBubble.classList.remove('selected');
+            selectedBubble = null;
+        }
+
+        function findFreePosition(excludeBubble = null) {
+            const margin = Math.min(40, board.clientWidth / 2, board.clientHeight / 2);
+            const maxX = Math.max(margin, board.clientWidth - margin);
+            const maxY = Math.max(margin, board.clientHeight - margin);
+            const bubbles = [...board.querySelectorAll('.number-bubble:not(.burning)')]
+                .filter(bubble => bubble !== excludeBubble);
+            let best = { x: board.clientWidth / 2, y: board.clientHeight / 2, clearance: -1 };
+
+            for (let attempt = 0; attempt < 150; attempt++) {
+                const x = margin + Math.random() * (maxX - margin);
+                const y = margin + Math.random() * (maxY - margin);
+                const clearance = bubbles.length
+                    ? Math.min(...bubbles.map(bubble => Math.hypot(x - parseFloat(bubble.style.left), y - parseFloat(bubble.style.top))))
+                    : Infinity;
+
+                if (clearance >= 75) return { x, y };
+                if (clearance > best.clearance) best = { x, y, clearance };
+            }
+
+            return best;
+        }
 
         function initGame() {
             // Xóa game cũ nếu có
             clearInterval(gameInterval);
             board.querySelectorAll('.number-bubble').forEach(b => b.remove());
             overlay.classList.remove('show');
-            selectedBubble = null;
+            clearSelection();
             isGameRunning = true;
 
             // Lấy cấu hình từ UI
@@ -388,11 +419,8 @@
             // Màu ngẫu nhiên
             bubble.style.backgroundColor = bubbleColors[Math.floor(Math.random() * bubbleColors.length)];
 
-            // Vị trí random trên board (Trừ đi kích thước bong bóng để không bị tràn viền)
-            const boardWidth = board.clientWidth;
-            const boardHeight = board.clientHeight;
-            const posX = Math.floor(Math.random() * (boardWidth - 80)) + 40;
-            const posY = Math.floor(Math.random() * (boardHeight - 80)) + 40;
+            // Ưu tiên vị trí không đè lên các số đã có.
+            const { x: posX, y: posY } = findFreePosition();
 
             bubble.style.left = `${posX}px`;
             bubble.style.top = `${posY}px`;
@@ -400,13 +428,18 @@
             // ---- XỬ LÝ SỰ KIỆN CHUỘT / KÉO THẢ ----
             let offsetX = 0;
             let offsetY = 0;
+            let startX = 0;
+            let startY = 0;
             let hasMoved = false; // Phân biệt giữa Click chọn và Kéo thả di chuyển
 
             bubble.addEventListener('mousedown', (e) => {
-                if(!isGameRunning) return;
+                if (!isGameRunning || (e.button !== 0 && e.button !== 2)) return;
+                e.preventDefault();
                 isDragging = true;
                 hasMoved = false;
                 currentDraggedBubble = bubble;
+                startX = e.clientX;
+                startY = e.clientY;
                 
                 // Đưa bong bóng đang tương tác lên trên cùng lớp hiển thị
                 board.appendChild(bubble);
@@ -422,6 +455,7 @@
             // Đăng ký sự kiện di chuyển chuột trên toàn màn hình để mượt mà hơn
             window.addEventListener('mousemove', (e) => {
                 if (!isDragging || currentDraggedBubble !== bubble) return;
+                if (Math.hypot(e.clientX - startX, e.clientY - startY) < 5) return;
                 hasMoved = true;
 
                 const boardRect = board.getBoundingClientRect();
@@ -461,8 +495,7 @@
 
             // Nếu click lại chính nó thì bỏ chọn
             if (selectedBubble === bubble) {
-                bubble.classList.remove('selected');
-                selectedBubble = null;
+                clearSelection();
                 return;
             }
 
@@ -497,10 +530,7 @@
                     selectedBubble.classList.remove('selected');
                     
                     [selectedBubble, bubble].forEach(b => {
-                        const boardWidth = board.clientWidth;
-                        const boardHeight = board.clientHeight;
-                        const newX = Math.floor(Math.random() * (boardWidth - 80)) + 40;
-                        const newY = Math.floor(Math.random() * (boardHeight - 80)) + 40;
+                        const { x: newX, y: newY } = findFreePosition(b);
                         
                         // Tạo hiệu ứng di chuyển mượt khi đổi chỗ ngẫu nhiên
                         b.style.transition = "left 0.5s ease, top 0.5s ease";
