@@ -1,0 +1,373 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Bắn số — Hỗ trợ học tập</title>
+  <style>
+    * { box-sizing: border-box; }
+    body { margin: 0; min-height: 100dvh; font-family: Arial, Helvetica, sans-serif; color: #193048; background: linear-gradient(160deg, #dff6ff, #f7f2ff); }
+    main { width: min(100% - 24px, 760px); margin: auto; padding: 14px 0 20px; }
+    .top { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 12px; }
+    h1 { margin: 0; font-size: clamp(24px, 5vw, 34px); color: #145a82; }
+    a { color: #145a82; font-weight: 700; text-decoration: none; }
+    a:hover { text-decoration: underline; }
+    .card { background: #fff; border: 2px solid #bce5f7; border-radius: 22px; box-shadow: 0 12px 32px #3975a326; }
+    #setup { max-width: 440px; margin: 32px auto; padding: 24px; }
+    #setup p { line-height: 1.5; }
+    label { display: block; margin: 18px 0 6px; font-weight: 700; }
+    input, select, button { font: inherit; }
+    input, select { width: 100%; min-height: 46px; padding: 10px 12px; border: 2px solid #a5d2e5; border-radius: 12px; background: #fff; color: #193048; }
+    input:focus-visible, select:focus-visible, button:focus-visible, a:focus-visible { outline: 3px solid #f8aa39; outline-offset: 2px; }
+    button { min-height: 44px; border: 0; border-radius: 12px; padding: 9px 16px; background: #d8f1fd; color: #145a82; font-weight: 700; cursor: pointer; }
+    button:hover { filter: brightness(.96); }
+    .primary { background: #0788bd; color: white; }
+    #setup .primary { display: block; width: 100%; margin-top: 24px; font-size: 18px; }
+    #game { text-align: center; }
+    .hud { display: flex; align-items: center; justify-content: center; flex-wrap: wrap; gap: 8px 16px; margin: 4px 0 10px; font-weight: 700; }
+    .hud span { white-space: nowrap; }
+    .hud button { min-height: 36px; padding: 6px 12px; }
+    .board { position: relative; width: min(100%, 440px, max(280px, calc(61.538dvh - 117px))); margin: auto; border: 4px solid #257aa8; border-radius: 18px; overflow: hidden; background: #ecfaff; box-shadow: 0 14px 28px #17426933; }
+    canvas { display: block; width: 100%; aspect-ratio: 16 / 26; height: auto; touch-action: none; cursor: crosshair; }
+    .controls { display: flex; justify-content: center; gap: 10px; margin: 10px 0 4px; }
+    .controls button { min-width: 60px; font-size: 20px; }
+    #fire { min-width: 120px; }
+    .hint { margin: 6px 0 0; color: #506b7e; font-size: 14px; }
+    .result { position: absolute; inset: 0; display: grid; place-items: center; padding: 16px; background: #0d3459ae; }
+    .result-box { width: min(100%, 320px); padding: 24px; background: white; border-radius: 20px; }
+    .result-box h2 { margin: 0 0 8px; }
+    .result-box p { margin: 0 0 18px; }
+    [hidden] { display: none !important; }
+    @media (max-width: 480px) { main { padding-top: 10px; } .top { margin-bottom: 6px; } .hint { font-size: 12px; } }
+  </style>
+</head>
+<body>
+  <main>
+    <header class="top">
+      <h1>🎯 Bắn số</h1>
+      <a href="index.html">← Trang chủ</a>
+    </header>
+
+    <form id="setup" class="card">
+      <p>Bắn một số lên để ghép với số trên bảng. Hai số có tổng đúng sẽ nổ; các số không còn nối với cạnh trên sẽ rơi xuống.</p>
+      <label for="target">Tổng để nổ</label>
+      <input id="target" type="number" min="2" max="99" step="1" value="10" inputmode="numeric" required>
+      <label for="difficulty">Thêm 8 số mới sau mỗi</label>
+      <select id="difficulty">
+        <option value="32">32 giây — Dễ</option>
+        <option value="26">26 giây — Vừa</option>
+        <option value="20">20 giây — Khó</option>
+      </select>
+      <button class="primary" type="submit">Bắt đầu chơi</button>
+    </form>
+
+    <section id="game" hidden aria-label="Trò chơi bắn số">
+      <div class="hud">
+        <span>Tổng: <strong id="goal">10</strong></span>
+        <span>Số mới sau: <strong id="countdown">32</strong>s</span>
+        <span>Đạn: <strong id="ammo">1</strong></span>
+        <button id="settings" type="button">Cài đặt</button>
+      </div>
+      <div class="board">
+        <canvas id="field" width="320" height="520" aria-label="Bảng chơi 16 ô ngang, 26 ô dọc. Chạm vào cột để bắn."></canvas>
+        <div id="result" class="result" hidden>
+          <div class="result-box">
+            <h2 id="result-title"></h2>
+            <p id="result-text"></p>
+            <button id="again" class="primary" type="button">Chơi lại</button>
+          </div>
+        </div>
+      </div>
+      <div class="controls">
+        <button id="left" type="button" aria-label="Chuyển ống bắn sang trái">◀</button>
+        <button id="fire" class="primary" type="button">Bắn ↑</button>
+        <button id="right" type="button" aria-label="Chuyển ống bắn sang phải">▶</button>
+      </div>
+      <p class="hint">Giữ và rê để ngắm, thả để bắn. Đường xanh lá sẽ nổ, cam sẽ dính lại, xanh dương là cột trống. Trên PC: ← → và phím cách.</p>
+    </section>
+  </main>
+  <script>
+    const COLS = 8, ROWS = 13, SIZE = 40, WIDTH = 320, HEIGHT = 520;
+    const canvas = document.getElementById('field');
+    const ctx = canvas.getContext('2d');
+    const setup = document.getElementById('setup');
+    const game = document.getElementById('game');
+    const result = document.getElementById('result');
+    const countdown = document.getElementById('countdown');
+    const ammo = document.getElementById('ammo');
+    const colors = ['#f45f80', '#f5aa35', '#42b9aa', '#638cf1', '#a475e3', '#e978bd'];
+    let grid, falling = [], bursts = [], shot = null, lane = 3, nextValue = 1;
+    let target = 10, interval = 32, remaining = 32, playing = false, lastFrame = 0, resultDelay = 0;
+    let aimingPointer = null;
+
+    const randomValue = () => 1 + Math.floor(Math.random() * (target - 1));
+    const center = (index) => index * SIZE + SIZE / 2;
+
+    function exposedNumbers() {
+      const exposed = [];
+      for (let col = 0; col < COLS; col++) {
+        for (let row = ROWS - 1; row >= 0; row--) {
+          if (grid[row][col] !== null) {
+            exposed.push(grid[row][col]);
+            break;
+          }
+        }
+      }
+      return exposed;
+    }
+
+    function chooseShot() {
+      const exposed = exposedNumbers();
+      return target - exposed[Math.floor(Math.random() * exposed.length)];
+    }
+
+    function refreshAmmo() {
+      if (!exposedNumbers().includes(target - nextValue)) nextValue = chooseShot();
+      ammo.textContent = nextValue;
+    }
+
+    function addRow() {
+      // Hàng mới không kích hoạt nổ; chỉ va chạm với đạn mới kích hoạt ghép số.
+      for (let row = ROWS - 1; row > 0; row--) grid[row] = grid[row - 1];
+      grid[0] = Array.from({ length: COLS }, randomValue);
+      if (grid[ROWS - 1].some(value => value !== null)) finish(false);
+      else refreshAmmo();
+    }
+
+    function dropLoose() {
+      const connected = new Set(), queue = [];
+      for (let col = 0; col < COLS; col++) if (grid[0][col] !== null) {
+        const key = col;
+        connected.add(key);
+        queue.push([0, col]);
+      }
+      for (let i = 0; i < queue.length; i++) {
+        const [row, col] = queue[i];
+        for (const [r, c] of [[row - 1, col], [row + 1, col], [row, col - 1], [row, col + 1]]) {
+          const key = r * COLS + c;
+          if (r < 0 || r >= ROWS || c < 0 || c >= COLS || grid[r][c] === null || connected.has(key)) continue;
+          connected.add(key);
+          queue.push([r, c]);
+        }
+      }
+      for (let row = 0; row < ROWS; row++) for (let col = 0; col < COLS; col++) {
+        if (grid[row][col] !== null && !connected.has(row * COLS + col)) {
+          falling.push({ col, y: center(row), value: grid[row][col], speed: 80 + Math.random() * 80 });
+          grid[row][col] = null;
+        }
+      }
+      return connected.size;
+    }
+
+    function finish(won) {
+      playing = false;
+      shot = null;
+      document.getElementById('result-title').textContent = won ? 'Chiến thắng! 🎉' : 'Hết lượt rồi!';
+      document.getElementById('result-text').textContent = won
+        ? 'Bạn đã làm sạch tất cả số nối với cạnh trên.'
+        : 'Một số đã chạm cạnh dưới. Thử lại nhé!';
+      resultDelay = won && falling.length ? 0.65 : 0;
+      result.hidden = resultDelay > 0;
+    }
+
+    function start() {
+      target = Number(document.getElementById('target').value);
+      interval = Number(document.getElementById('difficulty').value);
+      remaining = interval;
+      grid = Array.from({ length: ROWS }, () => Array(COLS).fill(null));
+      for (let row = 0; row < 3; row++) grid[row] = Array.from({ length: COLS }, randomValue);
+      falling = []; bursts = []; shot = null; lane = 3;
+      aimingPointer = null;
+      resultDelay = 0;
+      nextValue = chooseShot();
+      playing = true;
+      lastFrame = performance.now();
+      document.getElementById('goal').textContent = target;
+      countdown.textContent = interval;
+      ammo.textContent = nextValue;
+      result.hidden = true;
+      setup.hidden = true;
+      game.hidden = false;
+    }
+
+    function shoot() {
+      if (!playing || shot) return;
+      shot = { col: lane, y: center(ROWS - 2), value: nextValue };
+      nextValue = chooseShot();
+      ammo.textContent = nextValue;
+    }
+
+    function hit(row, col) {
+      if (shot.value + grid[row][col] !== target) {
+        const landingRow = row + 1;
+        if (landingRow >= ROWS) return finish(false);
+        if (landingRow === ROWS - 1) return finish(false);
+        const neighbor = [col - 1, col + 1].find(other =>
+          other >= 0 && other < COLS && grid[landingRow][other] !== null &&
+          shot.value + grid[landingRow][other] === target);
+        if (neighbor === undefined) {
+          grid[landingRow][col] = shot.value;
+          shot = null;
+          refreshAmmo();
+          return;
+        }
+        row = landingRow;
+        col = neighbor;
+      }
+      bursts.push({ x: center(col), y: center(row), age: 0 });
+      grid[row][col] = null;
+      shot = null;
+      if (dropLoose() === 0) return finish(true);
+      refreshAmmo();
+    }
+
+    function update(dt) {
+      remaining -= dt;
+      while (remaining <= 0 && playing) {
+        addRow();
+        remaining += interval;
+      }
+      countdown.textContent = Math.max(0, Math.ceil(remaining));
+      if (!playing || !shot) return;
+      shot.y -= 360 * Math.min(dt, 0.05);
+      for (let row = ROWS - 1; row >= 0; row--) {
+        if (grid[row][shot.col] !== null && shot.y - center(row) <= 36) {
+          hit(row, shot.col);
+          return;
+        }
+      }
+      if (shot.y <= center(0)) {
+        grid[0][shot.col] = shot.value;
+        shot = null;
+        refreshAmmo();
+      }
+    }
+
+    function drawBall(x, y, value, alpha = 1) {
+      ctx.globalAlpha = alpha;
+      ctx.beginPath();
+      ctx.arc(x, y, 18, 0, Math.PI * 2);
+      ctx.fillStyle = colors[value % colors.length];
+      ctx.fill();
+      ctx.lineWidth = 2;
+      ctx.strokeStyle = '#ffffff';
+      ctx.stroke();
+      ctx.fillStyle = '#ffffff';
+      ctx.font = value >= 10 ? 'bold 18px Arial' : 'bold 22px Arial';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(value, x, y + 1);
+      ctx.globalAlpha = 1;
+    }
+
+    function draw() {
+      ctx.fillStyle = '#eaf8ff';
+      ctx.fillRect(0, 0, WIDTH, HEIGHT);
+      ctx.strokeStyle = '#cce9f6';
+      ctx.lineWidth = 1;
+      for (let x = SIZE / 2; x < WIDTH; x += SIZE / 2) { ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, HEIGHT); ctx.stroke(); }
+      for (let y = SIZE / 2; y < HEIGHT; y += SIZE / 2) { ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(WIDTH, y); ctx.stroke(); }
+      ctx.fillStyle = '#ff8b8b';
+      ctx.fillRect(0, HEIGHT - 3, WIDTH, 3);
+      if (!grid) return;
+      let guideRow = -1, guideColor = '#2980b9';
+      if (playing) {
+        for (let row = ROWS - 1; row >= 0; row--) if (grid[row][lane] !== null) { guideRow = row; break; }
+        if (guideRow >= 0) guideColor = nextValue + grid[guideRow][lane] === target ? '#138a51' : '#b96712';
+        const x = center(lane);
+        ctx.beginPath();
+        ctx.moveTo(x, HEIGHT - 34);
+        ctx.lineTo(x, guideRow >= 0 ? center(guideRow) + 20 : 10);
+        ctx.setLineDash([8, 6]);
+        ctx.strokeStyle = guideColor;
+        ctx.lineWidth = 4;
+        ctx.stroke();
+        ctx.setLineDash([]);
+      }
+      for (let row = 0; row < ROWS; row++) for (let col = 0; col < COLS; col++) {
+        if (grid[row][col] !== null) drawBall(center(col), center(row), grid[row][col]);
+      }
+      if (guideRow >= 0) {
+        ctx.beginPath();
+        ctx.arc(center(lane), center(guideRow), 21, 0, Math.PI * 2);
+        ctx.strokeStyle = guideColor;
+        ctx.lineWidth = 3;
+        ctx.stroke();
+      }
+      for (const ball of falling) drawBall(center(ball.col), ball.y, ball.value);
+      for (const burst of bursts) {
+        ctx.beginPath();
+        ctx.arc(burst.x, burst.y, 20 + burst.age * 90, 0, Math.PI * 2);
+        ctx.strokeStyle = `rgba(255, 123, 47, ${Math.max(0, 1 - burst.age * 2)})`;
+        ctx.lineWidth = 5;
+        ctx.stroke();
+      }
+      if (shot) drawBall(center(shot.col), shot.y, shot.value);
+      if (playing) {
+        const x = center(lane);
+        ctx.fillStyle = '#185986';
+        ctx.beginPath();
+        ctx.moveTo(x - 16, HEIGHT);
+        ctx.lineTo(x - 11, HEIGHT - 19);
+        ctx.lineTo(x + 11, HEIGHT - 19);
+        ctx.lineTo(x + 16, HEIGHT);
+        ctx.fill();
+        drawBall(x, center(ROWS - 1), nextValue);
+      }
+    }
+
+    function frame(now) {
+      const dt = (now - (lastFrame || now)) / 1000;
+      lastFrame = now;
+      if (playing) update(dt);
+      falling.forEach(ball => { ball.speed += 420 * Math.min(dt, 0.05); ball.y += ball.speed * Math.min(dt, 0.05); });
+      falling = falling.filter(ball => ball.y < HEIGHT + SIZE);
+      bursts.forEach(burst => { burst.age += dt; });
+      bursts = bursts.filter(burst => burst.age < 0.5);
+      if (resultDelay > 0) {
+        resultDelay -= dt;
+        if (resultDelay <= 0 && !game.hidden) result.hidden = false;
+      }
+      if (!game.hidden) draw();
+      requestAnimationFrame(frame);
+    }
+
+    setup.addEventListener('submit', event => { event.preventDefault(); start(); });
+    document.getElementById('again').addEventListener('click', start);
+    document.getElementById('settings').addEventListener('click', () => { playing = false; resultDelay = 0; game.hidden = true; setup.hidden = false; });
+    document.getElementById('left').addEventListener('click', () => { lane = Math.max(0, lane - 1); });
+    document.getElementById('right').addEventListener('click', () => { lane = Math.min(COLS - 1, lane + 1); });
+    document.getElementById('fire').addEventListener('click', shoot);
+    function aimAt(event) {
+      const rect = canvas.getBoundingClientRect();
+      lane = Math.max(0, Math.min(COLS - 1, Math.floor((event.clientX - rect.left) * COLS / rect.width)));
+    }
+    canvas.addEventListener('pointermove', event => {
+      if (playing && (aimingPointer === null || aimingPointer === event.pointerId)) aimAt(event);
+    });
+    canvas.addEventListener('pointerdown', event => {
+      if (!playing || aimingPointer !== null) return;
+      event.preventDefault();
+      aimingPointer = event.pointerId;
+      canvas.setPointerCapture(event.pointerId);
+      aimAt(event);
+    });
+    canvas.addEventListener('pointerup', event => {
+      if (aimingPointer !== event.pointerId) return;
+      aimAt(event);
+      aimingPointer = null;
+      shoot();
+    });
+    canvas.addEventListener('pointercancel', event => { if (aimingPointer === event.pointerId) aimingPointer = null; });
+    window.addEventListener('keydown', event => {
+      if (!playing) return;
+      if (event.key === 'ArrowLeft') lane = Math.max(0, lane - 1);
+      else if (event.key === 'ArrowRight') lane = Math.min(COLS - 1, lane + 1);
+      else if (event.code === 'Space') shoot();
+      else return;
+      event.preventDefault();
+    });
+    requestAnimationFrame(frame);
+  </script>
+</body>
+</html>
