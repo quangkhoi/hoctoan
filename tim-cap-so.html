@@ -26,8 +26,11 @@
             color: var(--text-color);
             display: flex;
             height: 100vh;
+            height: 100dvh;
             overflow: hidden;
         }
+
+        body.playing #control-panel { display: none; }
 
         /* --- CẠNH TRÁI: PANEL ĐIỀU KHIỂN --- */
         #control-panel {
@@ -122,16 +125,38 @@
             flex-direction: column;
             padding: 20px;
             position: relative;
+            min-width: 0;
+            min-height: 0;
         }
+
+        #game-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+
+        #btn-settings, #btn-replay {
+            border: 0;
+            border-radius: 12px;
+            padding: 12px 16px;
+            background: #dcfce7;
+            color: #166534;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        #btn-settings { display: none; }
+        body.playing #btn-settings { display: block; }
 
         /* Thanh tiến độ thời gian */
         #progress-container {
-            width: 80%;
-            max-width: 600px;
+            flex: 1;
             height: 25px;
             background-color: #e2e8f0;
             border-radius: 20px;
-            margin: 0 auto 20px auto;
+            margin: 0;
             overflow: hidden;
             border: 3px solid #cbd5e1;
             box-shadow: inset 0 2px 4px rgba(0,0,0,0.1);
@@ -147,6 +172,7 @@
 
         /* Vùng chơi game */
         #game-board {
+            --bubble-size: 65px;
             flex: 1;
             background-color: #ffffff;
             border-radius: 24px;
@@ -159,8 +185,8 @@
         /* Bong bóng số */
         .number-bubble {
             position: absolute;
-            width: 65px;
-            height: 65px;
+            width: var(--bubble-size);
+            height: var(--bubble-size);
             border-radius: 50%;
             display: flex;
             align-items: center;
@@ -173,6 +199,7 @@
             text-shadow: 1px 1px 2px rgba(0,0,0,0.3);
             transform: translate(-50%, -50%);
             transition: transform 0.1s ease;
+            touch-action: none;
         }
 
         .number-bubble:active {
@@ -248,6 +275,20 @@
             color: #64748b;
         }
 
+        #btn-replay { margin-top: 20px; min-height: 44px; }
+
+        @media (max-width: 700px) {
+            body:not(.playing) { height: auto; min-height: 100dvh; overflow: auto; }
+            body:not(.playing) #control-panel { width: 100%; min-height: 100dvh; padding: 20px; }
+            body:not(.playing) #main-screen { display: none; }
+            body.playing #main-screen { padding: 10px; }
+            #game-header { margin-bottom: 10px; }
+            #game-board { --bubble-size: 48px; border-radius: 16px; }
+            .number-bubble { font-size: 20px; }
+            .message-box { max-width: calc(100vw - 36px); padding: 24px; }
+            .message-box h1 { font-size: 32px; }
+        }
+
         .win h1 { color: #22c55e; text-shadow: 2px 2px 0 #bbf7d0; }
         .lose h1 { color: #ef4444; text-shadow: 2px 2px 0 #fecdd3; }
     </style>
@@ -268,9 +309,9 @@
         <div class="setting-group">
             <label for="difficulty">Độ khó:</label>
             <select id="difficulty">
-                <option value="1">Độ khó 1 (6s / cặp)</option>
-                <option value="2">Độ khó 2 (5s / cặp)</option>
-                <option value="3">Độ khó 3 (4s / cặp)</option>
+                <option value="1">Độ khó 1 (10s / cặp)</option>
+                <option value="2">Độ khó 2 (8s / cặp)</option>
+                <option value="3">Độ khó 3 (6s / cặp)</option>
             </select>
         </div>
 
@@ -285,8 +326,11 @@
     <!-- MÀN HÌNH CHÍNH -->
     <div id="main-screen">
         <!-- Thanh tiến độ thời gian -->
-        <div id="progress-container">
-            <div id="progress-bar"></div>
+        <div id="game-header">
+            <div id="progress-container">
+                <div id="progress-bar"></div>
+            </div>
+            <button id="btn-settings" type="button">⚙ Cài đặt</button>
         </div>
 
         <!-- Board chơi game -->
@@ -298,6 +342,7 @@
                 <div class="message-box" id="message-box">
                     <h1 id="result-title">CHIẾN THẮNG!</h1>
                     <p id="result-desc">Bé giỏi quá, chạm vào nút Bắt đầu để chơi lại nhé!</p>
+                    <button id="btn-replay" type="button">Chơi lại</button>
                 </div>
             </div>
         </div>
@@ -306,6 +351,8 @@
     <script>
         const board = document.getElementById('game-board');
         const btnStart = document.getElementById('btn-start');
+        const btnSettings = document.getElementById('btn-settings');
+        const btnReplay = document.getElementById('btn-replay');
         const progressBar = document.getElementById('progress-bar');
         const overlay = document.getElementById('result-overlay');
         const messageBox = document.getElementById('message-box');
@@ -326,9 +373,22 @@
 
         // Bắt đầu trò chơi
         btnStart.addEventListener('click', initGame);
+        btnReplay.addEventListener('click', initGame);
+        btnSettings.addEventListener('click', () => {
+            clearInterval(gameInterval);
+            isGameRunning = false;
+            document.body.classList.remove('playing');
+        });
         board.addEventListener('contextmenu', (event) => event.preventDefault());
-        board.addEventListener('mousedown', (event) => {
+        board.addEventListener('pointerdown', (event) => {
             if (event.target === board && (event.button === 0 || event.button === 2)) clearSelection();
+        });
+        window.addEventListener('resize', () => {
+            board.querySelectorAll('.number-bubble').forEach(bubble => {
+                const radius = bubble.offsetWidth / 2;
+                bubble.style.left = `${Math.min(Math.max(parseFloat(bubble.style.left), radius), Math.max(radius, board.clientWidth - radius))}px`;
+                bubble.style.top = `${Math.min(Math.max(parseFloat(bubble.style.top), radius), Math.max(radius, board.clientHeight - radius))}px`;
+            });
         });
 
         function clearSelection() {
@@ -337,7 +397,8 @@
         }
 
         function findFreePosition(excludeBubble = null) {
-            const margin = Math.min(40, board.clientWidth / 2, board.clientHeight / 2);
+            const radius = parseFloat(getComputedStyle(board).getPropertyValue('--bubble-size')) / 2;
+            const margin = Math.min(radius + 6, board.clientWidth / 2, board.clientHeight / 2);
             const maxX = Math.max(margin, board.clientWidth - margin);
             const maxY = Math.max(margin, board.clientHeight - margin);
             const bubbles = [...board.querySelectorAll('.number-bubble:not(.burning)')]
@@ -351,7 +412,7 @@
                     ? Math.min(...bubbles.map(bubble => Math.hypot(x - parseFloat(bubble.style.left), y - parseFloat(bubble.style.top))))
                     : Infinity;
 
-                if (clearance >= 75) return { x, y };
+                if (clearance >= radius * 2 + 10) return { x, y };
                 if (clearance > best.clearance) best = { x, y, clearance };
             }
 
@@ -364,6 +425,7 @@
             board.querySelectorAll('.number-bubble').forEach(b => b.remove());
             overlay.classList.remove('show');
             clearSelection();
+            document.body.classList.add('playing');
             isGameRunning = true;
 
             // Lấy cấu hình từ UI
@@ -375,9 +437,9 @@
             activePairsCount = pairCount;
 
             // Tính toán thời gian dựa trên độ khó
-            let timePerPair = 6;
-            if (difficulty === 2) timePerPair = 5;
-            if (difficulty === 3) timePerPair = 4;
+            let timePerPair = 10;
+            if (difficulty === 2) timePerPair = 8;
+            if (difficulty === 3) timePerPair = 6;
 
             totalTime = pairCount * timePerPair;
             timeLeft = totalTime;
@@ -425,17 +487,19 @@
             bubble.style.left = `${posX}px`;
             bubble.style.top = `${posY}px`;
 
-            // ---- XỬ LÝ SỰ KIỆN CHUỘT / KÉO THẢ ----
+            // ---- XỬ LÝ CHẠM / CHUỘT / KÉO THẢ ----
             let offsetX = 0;
             let offsetY = 0;
             let startX = 0;
             let startY = 0;
             let hasMoved = false; // Phân biệt giữa Click chọn và Kéo thả di chuyển
+            let pointerId = null;
 
-            bubble.addEventListener('mousedown', (e) => {
-                if (!isGameRunning || (e.button !== 0 && e.button !== 2)) return;
+            bubble.addEventListener('pointerdown', (e) => {
+                if (!isGameRunning || isDragging || (e.button !== 0 && e.button !== 2)) return;
                 e.preventDefault();
                 isDragging = true;
+                pointerId = e.pointerId;
                 hasMoved = false;
                 currentDraggedBubble = bubble;
                 startX = e.clientX;
@@ -443,18 +507,16 @@
                 
                 // Đưa bong bóng đang tương tác lên trên cùng lớp hiển thị
                 board.appendChild(bubble);
+                bubble.setPointerCapture(e.pointerId);
 
                 // Tính toán khoảng cách từ chuột tới tâm bóng
                 const rect = bubble.getBoundingClientRect();
-                const boardRect = board.getBoundingClientRect();
-                
                 offsetX = e.clientX - rect.left - rect.width/2;
                 offsetY = e.clientY - rect.top - rect.height/2;
             });
 
-            // Đăng ký sự kiện di chuyển chuột trên toàn màn hình để mượt mà hơn
-            window.addEventListener('mousemove', (e) => {
-                if (!isDragging || currentDraggedBubble !== bubble) return;
+            bubble.addEventListener('pointermove', (e) => {
+                if (!isDragging || currentDraggedBubble !== bubble || e.pointerId !== pointerId) return;
                 if (Math.hypot(e.clientX - startX, e.clientY - startY) < 5) return;
                 hasMoved = true;
 
@@ -465,7 +527,7 @@
                 let newY = e.clientY - boardRect.top - offsetY;
 
                 // Giới hạn trong phạm vi Board
-                const radius = 32.5; // 65px / 2
+                const radius = bubble.offsetWidth / 2;
                 if (newX < radius) newX = radius;
                 if (newX > boardRect.width - radius) newX = boardRect.width - radius;
                 if (newY < radius) newY = radius;
@@ -475,14 +537,23 @@
                 bubble.style.top = `${newY}px`;
             });
 
-            window.addEventListener('mouseup', (e) => {
-                if (currentDraggedBubble !== bubble) return;
+            bubble.addEventListener('pointerup', (e) => {
+                if (currentDraggedBubble !== bubble || e.pointerId !== pointerId) return;
                 isDragging = false;
+                pointerId = null;
                 currentDraggedBubble = null;
 
                 // Nếu chỉ là click chuột chứ không kéo đi xa, thực hiện chọn số
                 if (!hasMoved) {
                     handleSelectBubble(bubble);
+                }
+            });
+
+            bubble.addEventListener('pointercancel', (e) => {
+                if (currentDraggedBubble === bubble && e.pointerId === pointerId) {
+                    isDragging = false;
+                    pointerId = null;
+                    currentDraggedBubble = null;
                 }
             });
 
@@ -565,7 +636,7 @@
             } else {
                 messageBox.className = "message-box lose";
                 resultTitle.textContent = "HẾT GIỜ MẤT RỒI! ⏰";
-                resultDesc.textContent = "Không sao cả, bé nhấn nút Bắt đầu để thử lại nhé!";
+                resultDesc.textContent = "Không sao cả, bé nhấn Chơi lại để thử lại nhé!";
             }
             overlay.classList.add('show');
         }
