@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Bé Học Các Cặp Số Cộng Lại Bằng 10</title>
     <style>
+        * { box-sizing: border-box; }
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             background: linear-gradient(135deg, #fbc2eb 0%, #a6c1ee 100%);
@@ -16,6 +17,9 @@
             align-items: center;
             color: #333;
         }
+
+        .home-link { position: sticky; top: 0; z-index: 20; align-self: flex-start; padding: 8px 12px; border-radius: 10px; background: white; }
+        body.viewing > .home-link { display: none; }
 
         h1 {
             color: #ff4757;
@@ -68,20 +72,21 @@
             border-color: #ff6b81;
             transform: scale(1.05);
         }
+        .button-container .pair-btn { font-size: 18px; }
 
         /* Khung hiển thị trực quan */
         .display-container {
             background: white;
-            padding: 30px;
+            padding: clamp(16px, 4vw, 30px);
             border-radius: 25px;
             box-shadow: 0 10px 30px rgba(0,0,0,0.1);
-            width: 90%;
-            max-width: 600px;
+            width: min(100%, 800px);
             text-align: center;
             display: none; /* Ẩn lúc đầu, hiện khi bấm số */
             animation: fadeIn 0.5s ease;
         }
 
+        body.viewing .button-container, body.viewing .subtitle { display: none; }
         @keyframes fadeIn {
             from { opacity: 0; transform: translateY(20px); }
             to { opacity: 1; transform: translateY(0); }
@@ -135,29 +140,44 @@
             margin-top: 15px;
             height: 30px;
         }
+
+        @media (max-width: 600px) {
+            body { padding: 12px; }
+            h1 { font-size: clamp(1.5rem, 7vw, 2.5rem); }
+            .subtitle { margin-bottom: 16px; text-align: center; }
+            .button-container { width: 100%; gap: 8px; margin-bottom: 16px; }
+            .button-container .pair-btn { flex: 1 1 90px; min-height: 48px; padding: 8px; font-size: 16px; }
+            .equation { font-size: clamp(2rem, 10vw, 3.5rem); margin-bottom: 16px; }
+            .circle { width: clamp(32px, 9vw, 45px); height: clamp(32px, 9vw, 45px); }
+        }
     </style>
+    <link rel="stylesheet" href="ui.css">
 </head>
 <body>
 
-    <a href="index.html" style="display:inline-block;margin-bottom:10px;color:#0984e3;text-decoration:none;font-size:14px;font-weight:700;">&larr; Về trang chủ</a>
+    <a class="home-link ui-button" href="index.html">← Trang chủ</a>
     <h1>🌈 Cầu Vồng Toán Học 🌈</h1>
     <div class="subtitle">Bé hãy chọn một cặp số xem điều kỳ diệu nhé!</div>
 
     <div class="button-container">
-        <button class="pair-btn" onclick="showPair(0, 10, this)">0 + 10</button>
-        <button class="pair-btn" onclick="showPair(1, 9, this)">1 + 9</button>
-        <button class="pair-btn" onclick="showPair(2, 8, this)">2 + 8</button>
-        <button class="pair-btn" onclick="showPair(3, 7, this)">3 + 7</button>
-        <button class="pair-btn" onclick="showPair(4, 6, this)">4 + 6</button>
-        <button class="pair-btn" onclick="showPair(5, 5, this)">5 + 5</button>
-        <button class="pair-btn" onclick="showPair(6, 4, this)">6 + 4</button>
-        <button class="pair-btn" onclick="showPair(7, 3, this)">7 + 3</button>
-        <button class="pair-btn" onclick="showPair(8, 2, this)">8 + 2</button>
-        <button class="pair-btn" onclick="showPair(9, 1, this)">9 + 1</button>
-        <button class="pair-btn" onclick="showPair(10, 0, this)">10 + 0</button>
+        <button class="pair-btn ui-button" onclick="showPair(0, 10, this)">0 + 10</button>
+        <button class="pair-btn ui-button" onclick="showPair(1, 9, this)">1 + 9</button>
+        <button class="pair-btn ui-button" onclick="showPair(2, 8, this)">2 + 8</button>
+        <button class="pair-btn ui-button" onclick="showPair(3, 7, this)">3 + 7</button>
+        <button class="pair-btn ui-button" onclick="showPair(4, 6, this)">4 + 6</button>
+        <button class="pair-btn ui-button" onclick="showPair(5, 5, this)">5 + 5</button>
+        <button class="pair-btn ui-button" onclick="showPair(6, 4, this)">6 + 4</button>
+        <button class="pair-btn ui-button" onclick="showPair(7, 3, this)">7 + 3</button>
+        <button class="pair-btn ui-button" onclick="showPair(8, 2, this)">8 + 2</button>
+        <button class="pair-btn ui-button" onclick="showPair(9, 1, this)">9 + 1</button>
+        <button class="pair-btn ui-button" onclick="showPair(10, 0, this)">10 + 0</button>
     </div>
 
     <div class="display-container" id="displayBox">
+        <div class="ui-actions ui-actions--sticky">
+            <a class="ui-button" href="index.html">← Trang chủ</a>
+            <button class="ui-button" type="button" onclick="choosePair()">⚙️ Chọn cặp khác</button>
+        </div>
         <div class="equation">
             <span class="num1" id="textN1">0</span> 
             <span style="color: #57606f;">+</span> 
@@ -181,6 +201,7 @@
         ];
 
         function showPair(n1, n2, btn) {
+            document.body.classList.add('viewing');
             // Xóa trạng thái active của các nút cũ
             document.querySelectorAll('.pair-btn').forEach(b => b.classList.remove('active'));
             // Thêm active cho nút vừa bấm
@@ -220,6 +241,11 @@
             // Hiển thị lời khen ngẫu nhiên để khích lệ bé
             const ngauNhien = Math.floor(Math.random() * lờiKhen.length);
             document.getElementById('cheerText').innerText = lờiKhen[ngauNhien];
+        }
+
+        function choosePair() {
+            document.body.classList.remove('viewing');
+            document.getElementById('displayBox').style.display = 'none';
         }
     </script>
 </body>

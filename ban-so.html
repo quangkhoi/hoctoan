@@ -8,7 +8,8 @@
     * { box-sizing: border-box; }
     body { margin: 0; min-height: 100dvh; font-family: Arial, Helvetica, sans-serif; color: #193048; background: linear-gradient(160deg, #dff6ff, #f7f2ff); }
     main { width: min(100% - 24px, 760px); margin: auto; padding: 14px 0 20px; }
-    .top { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 12px; }
+    .top { position: sticky; top: 0; z-index: 20; display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 12px; padding: 4px; border-radius: 12px; background: #eaf7ff; }
+    body.playing .top { display: none; }
     h1 { margin: 0; font-size: clamp(24px, 5vw, 34px); color: #145a82; }
     a { color: #145a82; font-weight: 700; text-decoration: none; }
     a:hover { text-decoration: underline; }
@@ -22,15 +23,16 @@
     button { min-height: 44px; border: 0; border-radius: 12px; padding: 9px 16px; background: #d8f1fd; color: #145a82; font-weight: 700; cursor: pointer; }
     button:hover { filter: brightness(.96); }
     .primary { background: #0788bd; color: white; }
-    #setup .primary { display: block; width: 100%; margin-top: 24px; font-size: 18px; }
+    #setup .primary { display: block; width: 100%; margin-top: 24px; }
     #game { text-align: center; }
+    .game-actions { margin-bottom: 8px; }
     .hud { display: flex; align-items: center; justify-content: center; flex-wrap: wrap; gap: 8px 16px; margin: 4px 0 10px; font-weight: 700; }
     .hud span { white-space: nowrap; }
     .hud button { min-height: 36px; padding: 6px 12px; }
     .board { position: relative; width: min(100%, 440px, max(280px, calc(61.538dvh - 117px))); margin: auto; border: 4px solid #257aa8; border-radius: 18px; overflow: hidden; background: #ecfaff; box-shadow: 0 14px 28px #17426933; }
     canvas { display: block; width: 100%; aspect-ratio: 16 / 26; height: auto; touch-action: none; cursor: crosshair; }
     .controls { display: flex; justify-content: center; gap: 10px; margin: 10px 0 4px; }
-    .controls button { min-width: 60px; font-size: 20px; }
+    .controls .ui-button { min-width: 60px; font-size: 20px; }
     #fire { min-width: 120px; }
     .hint { margin: 6px 0 0; color: #506b7e; font-size: 14px; }
     .result { position: absolute; inset: 0; display: grid; place-items: center; padding: 16px; background: #0d3459ae; }
@@ -38,14 +40,15 @@
     .result-box h2 { margin: 0 0 8px; }
     .result-box p { margin: 0 0 18px; }
     [hidden] { display: none !important; }
-    @media (max-width: 480px) { main { padding-top: 10px; } .top { margin-bottom: 6px; } .hint { font-size: 12px; } }
+    @media (max-width: 480px) { main { padding-top: 10px; } .top { margin-bottom: 6px; } .hint { font-size: 12px; } #game .game-actions > .ui-button { flex: 1 1 auto; min-width: 0; } }
   </style>
+  <link rel="stylesheet" href="ui.css">
 </head>
 <body>
   <main>
     <header class="top">
       <h1>🎯 Bắn số</h1>
-      <a href="index.html">← Trang chủ</a>
+      <a class="home-link ui-button" href="index.html">← Trang chủ</a>
     </header>
 
     <form id="setup" class="card">
@@ -58,15 +61,19 @@
         <option value="26">26 giây — Vừa</option>
         <option value="20">20 giây — Khó</option>
       </select>
-      <button class="primary" type="submit">Bắt đầu chơi</button>
+      <button class="primary ui-button ui-button--primary" type="submit">Bắt đầu chơi</button>
     </form>
 
     <section id="game" hidden aria-label="Trò chơi bắn số">
+      <div class="game-actions ui-actions ui-actions--sticky">
+        <a class="ui-button" href="index.html">← Trang chủ</a>
+        <button class="ui-button" id="settings" type="button">⚙️ Cài đặt</button>
+        <button class="ui-button" id="new-game" type="button">↻ Chơi mới</button>
+      </div>
       <div class="hud">
         <span>Tổng: <strong id="goal">10</strong></span>
         <span>Số mới sau: <strong id="countdown">32</strong>s</span>
         <span>Đạn: <strong id="ammo">1</strong></span>
-        <button id="settings" type="button">Cài đặt</button>
       </div>
       <div class="board">
         <canvas id="field" width="320" height="520" aria-label="Bảng chơi 16 ô ngang, 26 ô dọc. Chạm vào cột để bắn."></canvas>
@@ -74,14 +81,14 @@
           <div class="result-box">
             <h2 id="result-title"></h2>
             <p id="result-text"></p>
-            <button id="again" class="primary" type="button">Chơi lại</button>
+            <button id="again" class="primary ui-button ui-button--primary" type="button">Chơi lại</button>
           </div>
         </div>
       </div>
       <div class="controls">
-        <button id="left" type="button" aria-label="Chuyển ống bắn sang trái">◀</button>
-        <button id="fire" class="primary" type="button">Bắn ↑</button>
-        <button id="right" type="button" aria-label="Chuyển ống bắn sang phải">▶</button>
+        <button id="left" class="ui-button" type="button" aria-label="Chuyển ống bắn sang trái">◀</button>
+        <button id="fire" class="primary ui-button ui-button--primary" type="button">Bắn ↑</button>
+        <button id="right" class="ui-button" type="button" aria-label="Chuyển ống bắn sang phải">▶</button>
       </div>
       <p class="hint">Giữ và rê để ngắm, thả để bắn. Đường xanh lá sẽ nổ, cam sẽ dính lại, xanh dương là cột trống. Trên PC: ← → và phím cách.</p>
     </section>
@@ -188,6 +195,7 @@
       result.hidden = true;
       setup.hidden = true;
       game.hidden = false;
+      document.body.classList.add('playing');
     }
 
     function shoot() {
@@ -334,7 +342,8 @@
 
     setup.addEventListener('submit', event => { event.preventDefault(); start(); });
     document.getElementById('again').addEventListener('click', start);
-    document.getElementById('settings').addEventListener('click', () => { playing = false; resultDelay = 0; game.hidden = true; setup.hidden = false; });
+    document.getElementById('new-game').addEventListener('click', start);
+    document.getElementById('settings').addEventListener('click', () => { playing = false; resultDelay = 0; game.hidden = true; setup.hidden = false; document.body.classList.remove('playing'); });
     document.getElementById('left').addEventListener('click', () => { lane = Math.max(0, lane - 1); });
     document.getElementById('right').addEventListener('click', () => { lane = Math.min(COLS - 1, lane + 1); });
     document.getElementById('fire').addEventListener('click', shoot);

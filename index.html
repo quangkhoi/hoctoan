@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Hỗ trợ học tập</title>
+  <title>Bé học toán</title>
   <style>
     :root {
       color-scheme: light;
@@ -63,7 +63,7 @@
       display: block;
       padding: 20px;
       border: 1px solid var(--line);
-      border-radius: 8px;
+      border-radius: 12px;
       background: var(--panel);
       color: inherit;
       text-decoration: none;
@@ -77,6 +77,8 @@
     .study-link:hover {
       border-color: var(--primary);
     }
+
+    .study-link:focus-visible { outline: 3px solid #f59e0b; outline-offset: 2px; }
 
     .study-link strong {
       display: block;
@@ -107,49 +109,66 @@
       background: #fef3c7;
       color: #92400e;
     }
+
+    @media (max-width: 700px) {
+      main { width: min(100% - 24px, 960px); padding: 24px 0; }
+      h1 { font-size: clamp(26px, 8vw, 36px); }
+      .sections { grid-template-columns: 1fr; gap: 24px; }
+      .study-link { padding: 16px; }
+    }
   </style>
 </head>
 <body>
   <main>
-    <h1>Hỗ trợ học tập</h1>
-    <p class="lead">Chọn nội dung luyện tập bên dưới.</p>
+    <h1>Bé học toán</h1>
+    <p class="lead">Chọn bài học, bài luyện tập hoặc trò chơi bên dưới.</p>
 
     <div class="sections">
       <div class="section">
         <div class="section-title">📖 Minh họa trực quan</div>
 
         <a class="study-link" href="gop-10.html">
-          <strong>Gộp 10 — Cộng có nhớ <span class="badge demo">minh họa</span></strong>
-          <span>Nhập hai số (1–9), xem trực quan cách tách số nhỏ hơn ghép với số lớn hơn tạo thành 10, phần còn lại là kết quả.</span>
+          <strong>Gộp 10 — Minh họa phép cộng <span class="badge demo">minh họa</span></strong>
+          <span>Nhập hai số để xem cách gộp. Khi tổng vượt 10, tách số thứ hai để làm đầy nhóm 10 rồi cộng phần còn lại.</span>
         </a>
 
         <a class="study-link" href="cong-bang-10.html">
           <strong>Các cặp số cộng bằng 10 <span class="badge demo">minh họa</span></strong>
-          <span>Tương tác 11 cột ghép số — mỗi cột là một cặp (0+10, 1+9, …, 10+0). Bấm để xem ô vuông hai hàng chập lại thành 10.</span>
+          <span>Chọn một trong 11 cặp từ 0 + 10 đến 10 + 0 và xem hai nhóm hình tròn có tổng bằng 10.</span>
+        </a>
+
+        <a class="study-link" href="minh-hoa-tru-qua-10.html">
+          <strong>Trừ qua 10 từng bước <span class="badge demo">minh họa</span></strong>
+          <span>Dùng nhóm 10 và nhóm đơn vị để thấy cách tách số trừ, bớt dần qua 10 rồi tìm kết quả.</span>
         </a>
       </div>
 
       <div class="section">
-        <div class="section-title">✏️ Luyện tập</div>
+        <div class="section-title">✏️ Luyện tập và trò chơi</div>
 
         <a class="study-link" href="cong-qua-10.html">
           <strong>Cộng qua 10 <span class="badge practice">luyện tập</span></strong>
-          <span>Luyện cộng 1 chữ số + 1 chữ số sao cho kết quả luôn &ge; 10. Hỗ trợ tự nhập đáp án hoặc trắc nghiệm 3 lựa chọn.</span>
+          <span>Cộng hai số có một chữ số để được kết quả từ 10 đến 18. Tự nhập đáp án hoặc chọn một trong ba đáp án.</span>
+        </a>
+
+        <a class="study-link" href="tru-qua-10.html">
+          <strong>Trừ qua 10 <span class="badge practice">luyện tập</span></strong>
+          <span>Luyện các phép trừ từ số 10–18 với số 1–9, kết quả nhỏ hơn 10. Tự nhập hoặc chọn đáp án.</span>
         </a>
 
         <a class="study-link" href="cong-tru-2-chu-so.html">
-          <strong>Cộng trừ 2 chữ số <span class="badge practice">luyện tập</span></strong>
-          <span>Tạo đề và chấm điểm các phép cộng/trừ trong phạm vi 2–3 chữ số. Hiển thị hàng dọc hoặc hàng ngang.</span>
+          <strong>Cộng trừ 2–3 chữ số <span class="badge practice">luyện tập</span></strong>
+          <span>Tạo và chấm các phép cộng, trừ với số có 2 hoặc 3 chữ số; chọn cách trình bày hàng dọc hoặc hàng ngang.</span>
         </a>
 
         <a class="study-link" href="tim-cap-so.html">
           <strong>Tìm cặp số <span class="badge practice">game</span></strong>
-          <span>Chọn tổng mục tiêu, độ khó và số cặp số rồi tìm hai số có tổng đúng trước khi hết giờ. Hỗ trợ kéo thả, hiệu ứng chọn, đốt cháy, chiến thắng và thua.</span>
+          <span>Chạm hai bong bóng có tổng bằng số mục tiêu trước khi hết giờ; có thể kéo để sắp xếp lại vị trí.</span>
         </a>
 
         <a class="study-link" href="ban-so.html">
           <strong>Bắn số <span class="badge practice">game</span></strong>
-          <span>Chọn tổng cần ghép, ngắm cột và bắn số để làm nổ cặp số. Các số mất kết nối sẽ rơi xuống trước khi hàng mới xuất hiện.</span>
+          <span>Ngắm cột và bắn số để ghép đúng tổng. Số mất kết nối với cạnh trên sẽ rơi; hàng mới xuất hiện theo thời gian.</span>
         </a>
       </div>
     </div>

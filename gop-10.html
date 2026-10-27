@@ -39,6 +39,9 @@
             text-align: center;
         }
 
+        .container > .home-link { position: sticky; top: 0; z-index: 20; display: flex; width: max-content; margin-bottom: 12px; }
+        body.practicing .home-link { display: none; }
+
         h1 {
             color: #d63031;
             font-size: 2rem;
@@ -69,6 +72,12 @@
             min-width: 0;
         }
 
+        .practice-actions { margin-bottom: 12px; }
+        body:not(.practicing) .practice-actions { display: none; }
+        .practice-actions button { width: auto; min-width: 120px; }
+        body.practicing .control-panel, body.practicing .subtitle { display: none; }
+        body.practicing .practice-actions { display: flex; }
+
         /* Bảng điều khiển nhập số */
         .control-panel {
             background: #f1f2f6;
@@ -95,7 +104,7 @@
             gap: 12px;
         }
 
-        #btn-next { grid-column: 1 / -1; }
+        #btn-random { grid-column: 1 / -1; }
 
         input[type="number"] {
             width: 88px;
@@ -157,26 +166,11 @@
             cursor: not-allowed;
         }
 
-        #btn-reset {
-            background: linear-gradient(135deg, #74b9ff, #0984e3);
-            box-shadow: 0 4px 15px rgba(9, 132, 227, 0.35);
-        }
-
-        #btn-reset:hover {
-            box-shadow: 0 6px 20px rgba(9, 132, 227, 0.5);
-        }
-
-        #btn-next {
-            width: 100%;
-            background: linear-gradient(135deg, #00b894, #00a884);
-            box-shadow: 0 4px 15px rgba(0, 184, 148, 0.35);
-        }
-
         /* Khung 10 ô */
         .workspace {
             display: flex;
             justify-content: center;
-            gap: 40px;
+            gap: clamp(12px, 3vw, 30px);
             margin-bottom: 30px;
             flex-wrap: wrap;
         }
@@ -198,8 +192,8 @@
 
         .ten-frame {
             display: grid;
-            grid-template-columns: repeat(5, 60px);
-            grid-template-rows: repeat(2, 60px);
+            grid-template-columns: repeat(5, 50px);
+            grid-template-rows: repeat(2, 50px);
             gap: 6px;
             background-color: #dfe6e9;
             padding: 8px;
@@ -345,27 +339,34 @@
         @media (max-width: 650px) {
             body { padding: 10px; }
             .container { padding: 16px; }
+            body:not(.practicing) .content-panel { display: none; }
             .control-panel { grid-template-columns: 1fr; }
             .input-row { gap: 8px; }
             input[type="number"] { width: 72px; height: 56px; }
-            #btn-next { grid-column: auto; }
             .workspace { gap: 20px; }
             .frame-wrapper { padding: 8px; }
             .ten-frame {
-                grid-template-columns: repeat(5, 40px);
-                grid-template-rows: repeat(2, 40px);
+                grid-template-columns: repeat(5, clamp(28px, 8vw, 40px));
+                grid-template-rows: repeat(2, clamp(28px, 8vw, 40px));
                 gap: 4px;
             }
             .apple { font-size: 1.6rem; }
+            .formula-display { font-size: clamp(1.4rem, 6vw, 2.2rem); }
         }
     </style>
+    <link rel="stylesheet" href="ui.css">
 </head>
 <body>
 
     <div class="container">
-        <a href="index.html" style="display:inline-block;margin-bottom:12px;color:#0984e3;text-decoration:none;font-size:14px;font-weight:700;">&larr; Về trang chủ</a>
+        <a class="home-link ui-button" href="index.html">← Trang chủ</a>
         <h1>🍭 Phép Cộng Thần Kỳ: Tạo Nhóm 10 🍭</h1>
         <div class="subtitle">Phương pháp tách số trực quan giúp bé học giỏi toán cộng qua 10!</div>
+        <div class="practice-actions ui-actions ui-actions--sticky">
+            <a class="ui-button" href="index.html">← Trang chủ</a>
+            <button class="ui-button" type="button" onclick="resetVisualizer(false)">⚙️ Cài đặt</button>
+            <button class="ui-button ui-button--primary" type="button" onclick="startNewRandom()">🎲 Phép tính mới</button>
+        </div>
 
         <div class="main-layout">
             <div class="side-panel">
@@ -376,13 +377,13 @@
                         <input type="number" id="num2" value="5" min="1" max="9" inputmode="numeric" aria-label="Số thứ hai">
                     </div>
                     <div class="button-row">
-                        <button id="btn-start" onclick="runAdditionVisualizer()">Xem Phép Tính ✨</button>
-                        <button id="btn-reset" type="button" onclick="resetVisualizer()">Reset</button>
+                        <button class="ui-button ui-button--primary" id="btn-start" onclick="runAdditionVisualizer()">Xem Phép Tính ✨</button>
+                        <button class="ui-button" id="btn-reset" type="button" onclick="resetVisualizer()">Đặt lại</button>
+                        <button class="ui-button" id="btn-random" type="button" onclick="runRandomAddition()">Tạo phép toán ngẫu nhiên 🎲</button>
                     </div>
-                    <button id="btn-next" type="button" hidden>Bước tiếp theo ▶</button>
                 </div>
                 <div class="explanation-box" id="explanation" aria-live="polite">
-                    <div style="color: #b2bec3; text-align: center; padding-top: 10px;">Nhập số từ 1 đến 9 và bấm nút để bắt đầu nhé bé!</div>
+                    <div style="color: #b2bec3; text-align: center; padding-top: 10px;">Nhập hai số hoặc chọn phép toán ngẫu nhiên để bắt đầu nhé bé!</div>
                 </div>
             </div>
             <div class="content-panel">
@@ -409,53 +410,70 @@
 
     <script>
         const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
-        const defaultExplanation = '<div style="color: #b2bec3; text-align: center; padding-top: 10px;">Nhập số từ 1 đến 9 và bấm nút để bắt đầu nhé bé!</div>';
-        const nextBtn = document.getElementById('btn-next');
+        const defaultExplanation = '<div style="color: #b2bec3; text-align: center; padding-top: 10px;">Nhập hai số hoặc chọn phép toán ngẫu nhiên để bắt đầu nhé bé!</div>';
         let cancelStepWait = null;
+        let runToken = 0;
 
         function waitForNext(expBox) {
             const hint = document.createElement('p');
             hint.className = 'step-hint';
-            hint.textContent = 'Bấm nút hoặc nhấn Space / Enter';
+            hint.textContent = 'Chạm hoặc click vào màn hình để tiếp tục (Space / Enter)';
             expBox.appendChild(hint);
-            nextBtn.hidden = false;
 
             return new Promise((resolve) => {
                 const finish = (continueRun) => {
                     window.removeEventListener('keydown', onKeyDown);
-                    nextBtn.removeEventListener('click', onNext);
-                    nextBtn.hidden = true;
+                    document.removeEventListener('click', onClick);
                     hint.remove();
                     cancelStepWait = null;
                     resolve(continueRun);
                 };
                 const onKeyDown = (event) => {
-                    if (!event.repeat && (event.code === 'Space' || event.key === 'Enter')) {
+                    if (!event.repeat && (event.code === 'Space' || event.key === 'Enter') &&
+                        !event.target.closest?.('button, input, select, a')) {
                         event.preventDefault();
                         finish(true);
                     }
                 };
-                const onNext = () => finish(true);
+                const onClick = (event) => {
+                    if (!event.target.closest('button, input, select, a')) finish(true);
+                };
                 cancelStepWait = () => finish(false);
                 window.addEventListener('keydown', onKeyDown);
-                nextBtn.addEventListener('click', onNext);
-                nextBtn.focus();
+                document.addEventListener('click', onClick);
             });
         }
 
-        function resetVisualizer() {
+        function resetVisualizer(resetInputs = true) {
+            runToken++;
             if (cancelStepWait) cancelStepWait();
-            nextBtn.hidden = true;
+            document.body.classList.remove('practicing');
             document.getElementById('split-legend').hidden = true;
             document.getElementById('btn-start').disabled = false;
-            document.getElementById('num1').value = 7;
-            document.getElementById('num2').value = 5;
+            document.getElementById('btn-random').disabled = false;
+            if (resetInputs) {
+                document.getElementById('num1').value = 7;
+                document.getElementById('num2').value = 5;
+            }
             document.getElementById('title-count-left').innerText = 0;
             document.getElementById('title-count-right').innerText = 0;
             document.getElementById('live-formula').innerHTML = '';
             document.getElementById('explanation').innerHTML = defaultExplanation;
             genGrid('frame-left');
             genGrid('frame-right');
+        }
+
+        function runRandomAddition() {
+            const n1 = 2 + Math.floor(Math.random() * 8);
+            const n2 = 11 - n1 + Math.floor(Math.random() * (n1 - 1));
+            document.getElementById('num1').value = n1;
+            document.getElementById('num2').value = n2;
+            runAdditionVisualizer();
+        }
+
+        function startNewRandom() {
+            resetVisualizer(false);
+            runRandomAddition();
         }
 
         function genGrid(frameId, receiver) {
@@ -472,8 +490,10 @@
         }
 
         async function runAdditionVisualizer() {
+            const thisRun = ++runToken;
             const btn = document.getElementById('btn-start');
             btn.disabled = true;
+            document.getElementById('btn-random').disabled = true;
 
             let n1 = parseInt(document.getElementById('num1').value);
             let n2 = parseInt(document.getElementById('num2').value);
@@ -481,8 +501,11 @@
             if (isNaN(n1) || n1 < 1 || n1 > 9 || isNaN(n2) || n2 < 1 || n2 > 9) {
                 alert("Bé ơi, hãy nhập các số từ 1 đến 9 nhé!");
                 btn.disabled = false;
+                document.getElementById('btn-random').disabled = false;
                 return;
             }
+
+            document.body.classList.add('practicing');
 
             const expBox = document.getElementById('explanation');
             const formula = document.getElementById('live-formula');
@@ -523,14 +546,17 @@
                     const el = document.getElementById(`apple-right-${i}`);
                     const cell = document.getElementById(`frame-left-cell-${idx}`);
                     await moveApple(el, cell);
+                    if (thisRun !== runToken) return;
                     document.getElementById('title-count-left').innerText = idx + 1;
                     document.getElementById('title-count-right').innerText = n2 - (i + 1);
                     await sleep(300);
+                    if (thisRun !== runToken) return;
                 }
 
                 formula.innerHTML = `<span class="highlight-red">${n1}</span> + <span class="highlight-green">${n2}</span> = <span class="highlight-blue">${n1 + n2}</span>`;
                 addStepText(expBox, `🎉 Có tất cả <b class="highlight-blue">${n1 + n2}</b> kẹo mút! Vậy <b>${n1} + ${n2} = ${n1 + n2}</b>.`);
                 btn.disabled = false;
+                document.getElementById('btn-random').disabled = false;
                 return;
             }
 
@@ -563,11 +589,14 @@
                 el.parentElement.classList.remove('split-to-ten');
                 cell.classList.remove('need-cell');
                 await moveApple(el, cell);
+                if (thisRun !== runToken) return;
                 animateCount(n1 + i + 1);
                 document.getElementById('title-count-right').innerText = n2 - (i + 1);
                 await sleep(350);
+                if (thisRun !== runToken) return;
             }
             await sleep(500);
+            if (thisRun !== runToken) return;
 
             // highlight the full 10-frame
             const recvFrame = document.getElementById('frame-left');
@@ -588,6 +617,7 @@
             recvFrame.classList.remove('dimmed');
             document.querySelectorAll('.remaining-focus').forEach(cell => cell.classList.remove('remaining-focus', 'split-remain'));
             btn.disabled = false;
+            document.getElementById('btn-random').disabled = false;
         }
 
         function addStepText(container, text) {
@@ -620,13 +650,20 @@
                 el.classList.add('moving');
                 el.style.transform = `translate(${dx}px, ${dy}px) scale(1.2)`;
 
-                el.addEventListener('transitionend', function handler() {
+                let settled = false;
+                function handler() {
+                    if (settled) return;
+                    settled = true;
                     el.removeEventListener('transitionend', handler);
+                    el.removeEventListener('transitioncancel', handler);
                     el.classList.remove('moving');
                     el.style.transform = 'none';
                     targetCell.appendChild(el);
                     resolve();
-                });
+                }
+                el.addEventListener('transitionend', handler);
+                el.addEventListener('transitioncancel', handler);
+                setTimeout(handler, 900);
             });
         }
 

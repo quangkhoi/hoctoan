@@ -1,0 +1,171 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Minh họa trừ qua 10</title>
+  <style>
+    * { box-sizing: border-box; }
+    body { margin: 0; min-height: 100dvh; padding: 16px; background: linear-gradient(150deg, #e0f2fe, #f5f3ff); color: #1e293b; font-family: Arial, Helvetica, sans-serif; }
+    main { width: min(100%, 800px); margin: 0 auto; }
+    h1 { margin: 12px 0 8px; color: #1d4ed8; font-size: clamp(26px, 6vw, 38px); }
+    h2 { margin: 0 0 12px; font-size: 20px; }
+    p { line-height: 1.5; }
+    .intro { text-align: center; }
+    .intro .ui-button { display: flex; width: max-content; }
+    .card { padding: 20px; border-radius: 18px; background: white; box-shadow: 0 8px 28px #1e293b18; }
+    #setup { width: min(100%, 440px); margin: 24px auto; }
+    .inputs { display: flex; align-items: center; justify-content: center; gap: 10px; margin: 20px 0; }
+    .inputs input { width: clamp(60px, 22vw, 88px); height: 54px; border: 2px solid #93c5fd; border-radius: 12px; font: 700 26px Arial, sans-serif; text-align: center; }
+    .inputs span { font-size: 28px; font-weight: bold; }
+    .setup-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+    .setup-actions .ui-button { flex: 1 1 160px; }
+    #error { min-height: 1.5em; color: #b91c1c; font-weight: bold; }
+    #lesson .ui-actions { margin-bottom: 12px; }
+    .summary { text-align: center; }
+    #equation { color: #1d4ed8; font-size: clamp(28px, 8vw, 48px); font-weight: 800; }
+    #explanation { min-height: 3em; font-size: clamp(17px, 4vw, 21px); font-weight: 700; }
+    .frames { display: flex; flex-wrap: wrap; justify-content: center; gap: 14px; cursor: pointer; }
+    .frame { flex: 1 1 270px; max-width: 350px; min-width: 0; padding: 14px; border: 2px dashed #93c5fd; border-radius: 16px; background: #fff; text-align: center; }
+    .cells { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 5px; }
+    .cell { display: grid; place-items: center; aspect-ratio: 1; border: 1px solid #cbd5e1; border-radius: 9px; background: #f8fafc; }
+    .candy { font-size: clamp(21px, 5vw, 32px); line-height: 1; }
+    .to-remove { outline: 3px solid #ef4444; outline-offset: -3px; background: #ffe4e6; }
+    .step-hint { margin: 12px 0; text-align: center; font-weight: 700; color: #475569; }
+    body.studying .intro { display: none; }
+    [hidden] { display: none !important; }
+    @media (max-width: 600px) { body { padding: 10px; } .card { padding: 14px; } .frame { flex-basis: 100%; } }
+  </style>
+  <link rel="stylesheet" href="ui.css">
+</head>
+<body>
+  <main>
+    <header class="intro">
+      <a class="ui-button" href="index.html">← Trang chủ</a>
+      <h1>Trừ qua 10 từng bước</h1>
+      <p>Nhìn nhóm chục và nhóm đơn vị để hiểu cách trừ qua 10.</p>
+    </header>
+
+    <form id="setup" class="card">
+      <h2>Chọn phép trừ</h2>
+      <p>Số hai chữ số từ 10 đến 18 trừ một số có một chữ số, kết quả nhỏ hơn 10.</p>
+      <div class="inputs">
+        <input id="first" type="number" min="10" max="18" step="1" value="13" inputmode="numeric" aria-label="Số bị trừ" required>
+        <span>−</span>
+        <input id="second" type="number" min="1" max="9" step="1" value="5" inputmode="numeric" aria-label="Số trừ" required>
+        <span>= ?</span>
+      </div>
+      <p id="error" role="alert"></p>
+      <div class="setup-actions">
+        <button class="ui-button ui-button--primary" type="submit">Xem minh họa</button>
+        <button class="ui-button" id="random-setup" type="button">🎲 Phép tính ngẫu nhiên</button>
+      </div>
+    </form>
+
+    <section id="lesson" hidden aria-label="Minh họa phép trừ">
+      <nav class="ui-actions ui-actions--sticky" aria-label="Thao tác minh họa">
+        <a class="ui-button" href="index.html">← Trang chủ</a>
+        <button class="ui-button" id="settings" type="button">⚙️ Cài đặt</button>
+        <button class="ui-button ui-button--primary" id="random-next" type="button">🎲 Phép tính mới</button>
+      </nav>
+      <div class="summary card">
+        <div id="equation"></div>
+        <p id="explanation" aria-live="polite"></p>
+      </div>
+      <div class="frames" id="stage" role="button" tabindex="0" aria-label="Chạm hoặc nhấn Enter để xem bước tiếp theo">
+        <div class="frame">
+          <h2>Nhóm 10 🍬</h2>
+          <div class="cells" id="tens"></div>
+        </div>
+        <div class="frame">
+          <h2>Nhóm đơn vị 🍭</h2>
+          <div class="cells" id="units"></div>
+        </div>
+      </div>
+      <p class="step-hint" id="step-hint">Chạm vào hình hoặc nhấn Enter để xem bước tiếp theo.</p>
+    </section>
+  </main>
+  <script>
+    const setup = document.getElementById('setup');
+    const lesson = document.getElementById('lesson');
+    const firstInput = document.getElementById('first');
+    const secondInput = document.getElementById('second');
+    const equation = document.getElementById('equation');
+    const explanation = document.getElementById('explanation');
+    let first = 13, second = 5, step = 0;
+
+    function drawFrame(id, count, highlighted = 0) {
+      document.getElementById(id).innerHTML = Array.from({ length: 10 }, (_, index) => {
+        const candy = index < count ? `<span class="candy">${id === 'tens' ? '🍬' : '🍭'}</span>` : '';
+        return `<div class="cell ${index >= count - highlighted && index < count ? 'to-remove' : ''}">${candy}</div>`;
+      }).join('');
+    }
+
+    function render() {
+      const units = first - 10;
+      const remaining = second - units;
+      const answer = first - second;
+      drawFrame('tens', step === 4 ? answer : 10, step === 3 ? remaining : 0);
+      drawFrame('units', step < 2 ? units : 0, step === 1 ? units : 0);
+
+      const formulas = [
+        `${first} − ${second} = ?`,
+        `${second} = ${units} + ${remaining}`,
+        `${first} − ${units} = 10`,
+        `10 − ${remaining} = ?`,
+        `${first} − ${second} = ${answer}`,
+      ];
+      const messages = [
+        `${first} có 1 nhóm 10 và ${units} đơn vị. ${units} đơn vị chưa đủ để bớt ${second}.`,
+        `Tách ${second} thành ${units} và ${remaining}. Trước tiên bớt ${units} đơn vị được tô đỏ.`,
+        `Đã bớt ${units} đơn vị. Còn đúng 10, rồi bớt tiếp ${remaining}.`,
+        `Tô đỏ ${remaining} kẹo trong nhóm 10 để chuẩn bị bớt đi.`,
+        `Còn ${answer} kẹo. Vậy ${first} − ${second} = ${answer}! 🎉`,
+      ];
+      equation.textContent = formulas[step];
+      explanation.textContent = messages[step];
+      document.getElementById('step-hint').textContent = step === 4
+        ? 'Hoàn thành! Chọn Phép tính mới để xem tiếp.'
+        : 'Chạm vào hình hoặc nhấn Enter để xem bước tiếp theo.';
+    }
+
+    function start() {
+      const a = Number(firstInput.value), b = Number(secondInput.value);
+      if (!Number.isInteger(a) || a < 10 || a > 18 || !Number.isInteger(b) || b < 1 || b > 9 || b <= a - 10) {
+        document.getElementById('error').textContent = 'Chọn số từ 10–18 trừ số từ 1–9, với hàng đơn vị của số đầu nhỏ hơn số trừ.';
+        return;
+      }
+      document.getElementById('error').textContent = '';
+      first = a; second = b; step = 0;
+      setup.hidden = true;
+      lesson.hidden = false;
+      document.body.classList.add('studying');
+      render();
+    }
+
+    function randomProblem() {
+      const a = 10 + Math.floor(Math.random() * 9);
+      firstInput.value = a;
+      secondInput.value = a - 9 + Math.floor(Math.random() * (19 - a));
+      start();
+    }
+
+    function nextStep() {
+      if (step < 4) { step++; render(); }
+    }
+
+    setup.addEventListener('submit', event => { event.preventDefault(); start(); });
+    document.getElementById('random-setup').addEventListener('click', randomProblem);
+    document.getElementById('random-next').addEventListener('click', randomProblem);
+    document.getElementById('settings').addEventListener('click', () => {
+      lesson.hidden = true;
+      setup.hidden = false;
+      document.body.classList.remove('studying');
+    });
+    document.getElementById('stage').addEventListener('click', nextStep);
+    document.getElementById('stage').addEventListener('keydown', event => {
+      if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); nextStep(); }
+    });
+  </script>
+</body>
+</html>

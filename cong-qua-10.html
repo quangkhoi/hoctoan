@@ -37,6 +37,8 @@
       grid-template-columns: 280px minmax(0, 1fr);
       min-height: 100vh;
     }
+    .app.practicing { grid-template-columns: minmax(0, 1fr); }
+    .app.practicing .sidebar { display: none; }
 
     .sidebar {
       background: linear-gradient(180deg, #fff5f7, #fff);
@@ -103,6 +105,7 @@
     }
 
     .choice {
+      position: relative;
       display: block;
       height: 44px;
       border: 3px solid #f0e6e8;
@@ -116,7 +119,8 @@
       user-select: none;
       transition: all 0.15s;
     }
-    .choice input { display: none; }
+    .choice input { position: absolute; opacity: 0; width: 1px; height: 1px; }
+    .choice:focus-within { outline: 3px solid var(--blue); outline-offset: 2px; }
     .choice:has(input:checked) {
       border-color: var(--pink);
       background: #fce4ec;
@@ -167,7 +171,7 @@
 
     .score {
       min-height: 48px;
-      margin-top: 16px;
+      margin: 12px 0 20px;
       padding: 12px 14px;
       border-radius: 12px;
       background: #fcfafb;
@@ -178,9 +182,13 @@
       color: #888;
     }
 
-    main { padding: 28px; overflow: auto; }
+    main { min-width: 0; padding: 28px; }
 
     .topbar { margin-bottom: 20px; }
+    .session-actions { margin-bottom: 12px; }
+    .app:not(.practicing) .session-actions { display: none; }
+    .app.practicing .session-actions { display: flex; }
+    .session-actions .ui-button { flex: 1 1 130px; }
 
     h2 {
       margin: 0 0 4px;
@@ -193,7 +201,7 @@
     .hint { margin: 0; color: #999; font-weight: 600; font-size: 15px; }
 
     .problems { display: grid; gap: 12px; }
-    .problems.horizontal { grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); }
+    .problems.horizontal { grid-template-columns: repeat(auto-fit, minmax(360px, 1fr)); }
 
     .problem {
       display: grid;
@@ -248,6 +256,10 @@
     input.answer:focus { border-color: var(--pink); }
 
     .mcq-options { display: flex; gap: 6px; }
+    .problem:has(.mcq-options) { grid-template-columns: minmax(0, 1fr) 32px; }
+    .problem:has(.mcq-options) .expression { grid-column: 1 / -1; }
+    .problem:has(.mcq-options) .mcq-options { grid-column: 1; grid-row: 2; }
+    .problem:has(.mcq-options) .result { grid-column: 2; grid-row: 2; }
 
     .mcq-btn {
       width: 54px;
@@ -300,23 +312,27 @@
 
     @media (max-width: 820px) {
       .app { grid-template-columns: 1fr; }
+      .app:not(.practicing) main { display: none; }
       .sidebar { border-right: 0; border-bottom: 3px solid #fce4ec; }
       main { padding: 20px; }
     }
 
     @media (max-width: 520px) {
+      main { padding: 12px; }
       .problems.horizontal { grid-template-columns: 1fr; }
-      .problem { grid-template-columns: minmax(0, 1fr) 80px 28px; gap: 8px; padding: 12px 14px; }
-      .expression { font-size: 24px; }
-      input.answer { width: 80px; height: 44px; font-size: 24px; }
+      .problem { grid-template-columns: minmax(0, 1fr) 72px 26px; gap: 6px; padding: 10px; }
+      .expression { gap: 4px; font-size: clamp(20px, 6vw, 24px); }
+      input.answer { width: 72px; height: 44px; font-size: 24px; }
       .mcq-btn { width: 46px; height: 44px; font-size: 18px; line-height: 38px; }
+      .problem:has(.mcq-options) { grid-template-columns: minmax(0, 1fr) 26px; }
     }
   </style>
+  <link rel="stylesheet" href="ui.css">
 </head>
 <body>
   <div class="app">
     <aside class="sidebar">
-      <a class="nav-link" href="index.html">&larr; Về trang chủ</a>
+      <a class="nav-link ui-button" href="index.html">← Trang chủ</a>
       <h1 class="brand">Cộng qua 10 <small>Luyện tập toán vui</small></h1>
 
       <div class="field">
@@ -339,17 +355,21 @@
       </fieldset>
 
       <div class="actions">
-        <button class="btn-pink" id="generateBtn" type="button">✨ Tạo đề mới</button>
-        <button class="btn-blue" id="gradeBtn" type="button">✅ Chấm điểm</button>
+        <button class="btn-pink ui-button ui-button--primary" id="generateBtn" type="button">✨ Tạo đề mới</button>
       </div>
-
-      <div class="score" id="scoreBox">🌟 Chưa có đề bài.</div>
     </aside>
 
     <main>
+      <div class="session-actions ui-actions ui-actions--sticky">
+        <a class="ui-button" href="index.html">← Trang chủ</a>
+        <button class="ui-button" id="settingsBtn" type="button">⚙️ Cài đặt</button>
+        <button class="ui-button" id="regenerateBtn" type="button">✨ Tạo đề mới</button>
+        <button class="ui-button ui-button--primary" id="gradeBtn" type="button">✅ Chấm điểm</button>
+      </div>
       <div class="topbar">
         <h2>🧮 Phép cộng qua 10</h2>
         <p class="hint" id="hintText">Nhập đáp án vào ô trống rồi bấm ✅ Chấm điểm nhé!</p>
+        <div class="score" id="scoreBox">🌟 Chưa có đề bài.</div>
       </div>
 
       <section id="problems" class="problems horizontal" aria-live="polite">
@@ -362,9 +382,12 @@
   </div>
 
   <script>
+    const app = document.querySelector('.app');
     const countEl = document.getElementById('count');
     const generateBtn = document.getElementById('generateBtn');
+    const regenerateBtn = document.getElementById('regenerateBtn');
     const gradeBtn = document.getElementById('gradeBtn');
+    const settingsBtn = document.getElementById('settingsBtn');
     const problemsEl = document.getElementById('problems');
     const scoreBox = document.getElementById('scoreBox');
     const hintText = document.getElementById('hintText');
@@ -484,6 +507,7 @@
 
       scoreBox.innerHTML = `🌟 Đã tạo <strong>${count}</strong> câu.`;
       renderProblems();
+      app.classList.add('practicing');
 
       const first = problemsEl.querySelector('.answer, .mcq-btn');
       if (first) first.focus();
@@ -540,7 +564,12 @@
     }
 
     generateBtn.addEventListener('click', generateProblems);
+    regenerateBtn.addEventListener('click', generateProblems);
     gradeBtn.addEventListener('click', gradeProblems);
+    settingsBtn.addEventListener('click', () => {
+      app.classList.remove('practicing');
+      window.scrollTo(0, 0);
+    });
   </script>
 </body>
 </html>

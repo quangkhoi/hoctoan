@@ -5,7 +5,7 @@ const vm = require('node:vm');
 const script = fs.readFileSync(__dirname + '/ban-so.html', 'utf8').match(/<script>([\s\S]*?)<\/script>/)[1];
 const ids = Object.fromEntries([
   'field', 'setup', 'game', 'result', 'countdown', 'ammo', 'target', 'difficulty',
-  'goal', 'result-title', 'result-text', 'again', 'settings', 'left', 'right', 'fire'
+  'goal', 'result-title', 'result-text', 'again', 'new-game', 'settings', 'left', 'right', 'fire'
 ].map(id => [id, { hidden: false, textContent: '', handlers: {}, addEventListener(type, fn) { this.handlers[type] = fn; } }]));
 const drawn = [], guide = [];
 ids.field.getContext = () => ({
@@ -18,8 +18,10 @@ ids.field.getBoundingClientRect = () => ({ left: 0, width: 320 });
 ids.field.setPointerCapture = () => {};
 ids.target.value = '10';
 ids.difficulty.value = '32';
+const bodyClasses = new Set();
+const body = { classList: { add: name => bodyClasses.add(name), remove: name => bodyClasses.delete(name) } };
 const context = vm.createContext({
-  document: { getElementById: id => ids[id] },
+  document: { getElementById: id => ids[id], body },
   window: { addEventListener() {} },
   requestAnimationFrame() {},
   performance: { now: () => 0 },
@@ -29,6 +31,7 @@ vm.runInContext(script, context);
 const run = code => vm.runInContext(code, context);
 
 run('start()');
+assert(bodyClasses.has('playing'));
 assert.equal(run('grid.slice(0, 3).flat().filter(value => value !== null).length'), 24);
 assert.equal(run('grid.slice(3).flat().filter(value => value !== null).length'), 0);
 assert.equal(run('exposedNumbers().includes(target - nextValue)'), true);
@@ -85,4 +88,9 @@ drawn.length = 0;
 run('draw()');
 assert.equal(drawn.at(-1).value, Number(run('nextValue')));
 assert.equal(drawn.at(-1).y, 501);
+ids['new-game'].handlers.click();
+assert.equal(run('shot'), null);
+assert.equal(run('grid.slice(0, 3).flat().filter(value => value !== null).length'), 24);
+ids.settings.handlers.click();
+assert(!bodyClasses.has('playing'));
 console.log('Bắn số: kiểm tra khởi tạo, đạn, rơi cụm, thắng và thua đều đạt.');
