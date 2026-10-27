@@ -1,0 +1,199 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Minh họa trừ hai chữ số - Bé học toán</title>
+  <style>
+    * { box-sizing: border-box; }
+    body { margin: 0; min-height: 100dvh; padding: 16px; background: linear-gradient(150deg, #e0f2fe, #fff7ed); color: #1e293b; }
+    main { width: min(100%, 900px); margin: 0 auto; }
+    h1 { margin: 12px 0 8px; color: #1d4ed8; font-size: clamp(26px, 6vw, 38px); }
+    p { line-height: 1.5; }
+    .intro { text-align: center; }
+    .intro .ui-button { display: flex; width: max-content; }
+    .card { padding: 20px; border-radius: 18px; background: #fff; box-shadow: 0 8px 28px #1e293b18; }
+    #setup { width: min(100%, 460px); margin: 24px auto; }
+    #setup h2 { margin: 0; }
+    .inputs { display: flex; align-items: center; justify-content: center; gap: 10px; margin: 20px 0; }
+    .inputs input { width: clamp(64px, 22vw, 90px); height: 54px; border: 2px solid #93c5fd; border-radius: 12px; font: 700 26px var(--ui-font); text-align: center; }
+    .inputs span { font-size: 28px; font-weight: 700; }
+    .setup-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+    .setup-actions .ui-button { flex: 1 1 160px; }
+    #error { min-height: 1.5em; color: #b91c1c; font-weight: 700; }
+    #lesson .ui-actions { margin-bottom: 12px; }
+    .summary { text-align: center; }
+    #equation { color: #1d4ed8; font-size: clamp(28px, 8vw, 48px); font-weight: 800; }
+    #explanation { min-height: 3em; margin-bottom: 0; font-size: clamp(17px, 4vw, 21px); font-weight: 700; }
+    #step-hint { margin: 12px 0; text-align: center; font-weight: 700; color: #475569; }
+    .place-values { display: grid; grid-template-columns: minmax(80px, 140px) repeat(2, minmax(0, 1fr)); gap: 8px; cursor: pointer; }
+    .place-values:focus-visible { outline: 3px solid #f59e0b; outline-offset: 3px; }
+    .column-title { padding: 8px; border-radius: 12px; background: #dbeafe; text-align: center; font-weight: 800; }
+    .row-label { display: grid; align-content: center; padding: 8px; border-radius: 12px; background: #dbeafe; font-weight: 700; }
+    .row-label strong { font-size: 26px; }
+    .row-label.subtract { background: #ffedd5; }
+    .tokens { display: flex; flex-wrap: wrap; align-content: flex-start; gap: 6px; min-height: 86px; padding: 10px; border: 2px dashed #93c5fd; border-radius: 14px; background: #fff; }
+    .tokens.subtract { border-color: #fdba74; background: #fff7ed; }
+    .token { display: grid; place-items: center; flex: none; font-weight: 800; }
+    .ten-token { width: 34px; height: 44px; border: 2px solid #3b82f6; border-radius: 8px; background: #bfdbfe; color: #1e3a8a; }
+    .unit-token { width: 26px; height: 26px; border: 2px solid #d97706; border-radius: 50%; background: #fde68a; color: #78350f; }
+    .token.marked { border-color: #dc2626; background: #fecaca; }
+    .token.used { opacity: .3; text-decoration: line-through; }
+    .zero { color: #94a3b8; font-weight: 700; }
+    .legend { text-align: center; color: #475569; font-weight: 700; }
+    body.studying .intro { display: none; }
+    [hidden] { display: none !important; }
+    @media (max-width: 600px) {
+      body { padding: 10px; }
+      .card { padding: 14px; }
+      .place-values { grid-template-columns: 80px repeat(2, minmax(0, 1fr)); gap: 5px; }
+      .column-title, .row-label { padding: 5px; font-size: 13px; }
+      .row-label strong { font-size: 20px; }
+      .tokens { min-height: 70px; padding: 6px; gap: 4px; }
+      .ten-token { width: 29px; height: 36px; font-size: 14px; }
+      .unit-token { width: 22px; height: 22px; font-size: 12px; }
+    }
+  </style>
+  <link rel="stylesheet" href="ui.css">
+</head>
+<body>
+  <main>
+    <header class="intro">
+      <a class="ui-button" href="index.html">← Trang chủ</a>
+      <h1>Trừ hai chữ số từng bước</h1>
+      <p>Xem cách bớt đơn vị, bớt chục và đổi 1 chục thành 10 đơn vị khi cần.</p>
+    </header>
+
+    <form id="setup" class="card">
+      <h2>Chọn phép trừ</h2>
+      <p>Nhập hai số từ 10 đến 99, số bị trừ không nhỏ hơn số trừ.</p>
+      <div class="inputs">
+        <input id="first" type="number" min="10" max="99" step="1" value="31" inputmode="numeric" aria-label="Số bị trừ" required>
+        <span>−</span>
+        <input id="second" type="number" min="10" max="99" step="1" value="17" inputmode="numeric" aria-label="Số trừ" required>
+        <span>= ?</span>
+      </div>
+      <p id="error" role="alert"></p>
+      <div class="setup-actions">
+        <button class="ui-button ui-button--primary" type="submit">Xem minh họa</button>
+        <button class="ui-button" id="random-setup" type="button">🎲 Phép tính ngẫu nhiên</button>
+      </div>
+    </form>
+
+    <section id="lesson" hidden aria-label="Minh họa trừ hai chữ số">
+      <nav class="ui-actions ui-actions--sticky" aria-label="Thao tác minh họa">
+        <a class="ui-button" href="index.html">← Trang chủ</a>
+        <button class="ui-button" id="settings" type="button">⚙️ Cài đặt</button>
+        <button class="ui-button ui-button--primary" id="random-next" type="button">🎲 Phép tính mới</button>
+      </nav>
+      <div class="summary card">
+        <div id="equation"></div>
+        <p id="explanation" aria-live="polite"></p>
+      </div>
+      <p id="step-hint">Chạm vào hình hoặc nhấn Enter để xem bước tiếp theo.</p>
+      <div class="place-values" id="stage" role="button" tabindex="0" aria-label="Chạm hoặc nhấn Enter để xem bước tiếp theo">
+        <div></div><div class="column-title">Chục × 10</div><div class="column-title">Đơn vị × 1</div>
+        <div class="row-label">Số bị trừ<strong id="first-label"></strong></div>
+        <div class="tokens" id="first-tens" aria-hidden="true"></div>
+        <div class="tokens" id="first-units" aria-hidden="true"></div>
+        <div class="row-label subtract">Số trừ<strong id="second-label"></strong></div>
+        <div class="tokens subtract" id="second-tens" aria-hidden="true"></div>
+        <div class="tokens subtract" id="second-units" aria-hidden="true"></div>
+      </div>
+      <p class="legend">Thẻ xanh = 1 chục. Chấm vàng = 1 đơn vị. Viền đỏ = sắp bớt.</p>
+    </section>
+  </main>
+  <script>
+    const setup = document.getElementById('setup');
+    const lesson = document.getElementById('lesson');
+    const firstInput = document.getElementById('first');
+    const secondInput = document.getElementById('second');
+    let first = 31, second = 17, step = 0;
+
+    function drawTokens(id, count, kind, marked = 0, used = false) {
+      document.getElementById(id).innerHTML = count === 0 ? '<span class="zero">0</span>' :
+        Array.from({ length: count }, (_, index) => `<span class="token ${kind}-token ${index >= count - marked ? 'marked' : ''} ${used ? 'used' : ''}">${kind === 'ten' ? 10 : 1}</span>`).join('');
+    }
+
+    function render() {
+      const tens = Math.floor(first / 10), units = first % 10;
+      const subtractTens = Math.floor(second / 10), subtractUnits = second % 10;
+      const borrow = units < subtractUnits;
+      const exchanged = borrow && step >= 1 ? 1 : 0;
+      const shownTens = tens - exchanged - (step >= 5 ? subtractTens : 0);
+      const shownUnits = units + exchanged * 10 - (step >= 3 ? subtractUnits : 0);
+      document.getElementById('first-label').textContent = first;
+      document.getElementById('second-label').textContent = second;
+      drawTokens('first-tens', shownTens, 'ten', step === 4 ? subtractTens : 0);
+      drawTokens('first-units', shownUnits, 'unit', step === 2 ? subtractUnits : 0);
+      drawTokens('second-tens', subtractTens, 'ten', 0, step >= 5);
+      drawTokens('second-units', subtractUnits, 'unit', 0, step >= 3);
+
+      const formulas = [
+        `${first} − ${second} = ?`,
+        `${first} = ${tens - 1} chục + ${units + 10} đơn vị`,
+        `${units + exchanged * 10} đơn vị − ${subtractUnits} đơn vị = ?`,
+        `${units + exchanged * 10} − ${subtractUnits} = ${shownUnits} đơn vị`,
+        `${shownTens} chục − ${subtractTens} chục = ?`,
+        `${first} − ${second} = ${first - second}`,
+      ];
+      const messages = [
+        `Số bị trừ ${first} ở hàng trên; số trừ ${second} ở hàng dưới. Hai cột chục và đơn vị thẳng nhau.`,
+        `${units} đơn vị không đủ bớt ${subtractUnits}. Đổi 1 thẻ chục ở hàng trên thành 10 chấm đơn vị.`,
+        `Bớt ${subtractUnits} đơn vị cùng cột. Các chấm viền đỏ ở hàng trên sẽ được lấy đi.`,
+        `Còn ${shownUnits} đơn vị. Phần đơn vị của số trừ đã dùng được làm mờ.`,
+        `Bớt ${subtractTens} chục cùng cột. Các thẻ viền đỏ ở hàng trên sẽ được lấy đi.`,
+        `Còn ${shownTens} chục và ${shownUnits} đơn vị. Vậy ${first} − ${second} = ${first - second}! 🎉`,
+      ];
+      document.getElementById('equation').textContent = formulas[step];
+      document.getElementById('explanation').textContent = messages[step];
+      document.getElementById('step-hint').textContent = step === 5
+        ? 'Hoàn thành! Chọn Phép tính mới để xem tiếp.'
+        : 'Chạm vào hình hoặc nhấn Enter để xem bước tiếp theo.';
+    }
+
+    function start() {
+      const a = Number(firstInput.value), b = Number(secondInput.value);
+      if (!Number.isInteger(a) || a < 10 || a > 99 || !Number.isInteger(b) || b < 10 || b > 99 || b > a) {
+        document.getElementById('error').textContent = 'Chọn hai số nguyên từ 10–99, với số bị trừ lớn hơn hoặc bằng số trừ.';
+        return;
+      }
+      document.getElementById('error').textContent = '';
+      first = a; second = b; step = 0;
+      setup.hidden = true;
+      lesson.hidden = false;
+      document.body.classList.add('studying');
+      render();
+      document.getElementById('stage').focus({ preventScroll: true });
+    }
+
+    function randomProblem() {
+      const a = 10 + Math.floor(Math.random() * 90);
+      firstInput.value = a;
+      secondInput.value = 10 + Math.floor(Math.random() * (a - 9));
+      start();
+    }
+
+    function nextStep() {
+      if (step >= 5) return;
+      step++;
+      if (step === 1 && first % 10 >= second % 10) step = 2;
+      if (step === 2 && second % 10 === 0) step = 4;
+      render();
+    }
+
+    setup.addEventListener('submit', event => { event.preventDefault(); start(); });
+    document.getElementById('random-setup').addEventListener('click', randomProblem);
+    document.getElementById('random-next').addEventListener('click', randomProblem);
+    document.getElementById('settings').addEventListener('click', () => {
+      lesson.hidden = true;
+      setup.hidden = false;
+      document.body.classList.remove('studying');
+    });
+    document.getElementById('stage').addEventListener('click', nextStep);
+    document.getElementById('stage').addEventListener('keydown', event => {
+      if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); nextStep(); }
+    });
+  </script>
+</body>
+</html>

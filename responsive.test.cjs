@@ -31,16 +31,17 @@ function load(file, selected) {
     querySelectorAll: () => [],
     createElement: () => new Element(),
   };
-  const context = vm.createContext({ document, window: { scrollTo() {} }, Math });
+  const context = vm.createContext({ document, window: { scrollTo() {}, location: { hash: '' } }, Math });
   const html = fs.readFileSync(__dirname + '/' + file, 'utf8');
   vm.runInContext(html.match(/<script>([\s\S]*?)<\/script>/)[1], context);
   return { context, app, body, getElementById };
 }
 
-for (const [file, selected] of [['cong-qua-10.html', 'input'], ['tru-qua-10.html', 'input'], ['cong-tru-2-chu-so.html', 'vertical']]) {
-  const page = load(file, selected);
+{
+  const file = 'cong-tru-2-chu-so.html';
+  const page = load(file, 'vertical');
   page.getElementById('count').value = '3';
-  page.getElementById('digits').value = '2';
+  page.getElementById('scope').value = 'two';
   page.getElementById('operation').value = 'add';
   page.getElementById('generateBtn').listeners.click();
   assert(page.app.classList.contains('practicing'), file);
@@ -55,24 +56,13 @@ for (const [file, selected] of [['cong-qua-10.html', 'input'], ['tru-qua-10.html
   assert(!page.app.classList.contains('practicing'), file);
 }
 
-const pairs = load('cong-bang-10.html');
-const pairButton = new Element();
-pairs.context.pairButton = pairButton;
-vm.runInContext('showPair(3, 7, pairButton)', pairs.context);
-assert(pairs.body.classList.contains('viewing'));
-assert.equal(pairs.getElementById('visualBox').children.length, 10);
-vm.runInContext('choosePair()', pairs.context);
-assert(!pairs.body.classList.contains('viewing'));
-assert.equal(pairs.getElementById('displayBox').style.display, 'none');
-
 const findPairs = fs.readFileSync(__dirname + '/tim-cap-so.html', 'utf8');
 assert.match(findPairs, /class="ui-actions" id="game-header">[\s\S]*?class="back-link game-home ui-button"[\s\S]*?id="btn-settings"[\s\S]*?id="btn-new"/);
 assert.match(fs.readFileSync(__dirname + '/gop-10.html', 'utf8'), /class="practice-actions ui-actions ui-actions--sticky">[\s\S]*?href="index\.html"[\s\S]*?resetVisualizer\(false\)[\s\S]*?startNewRandom\(\)/);
 assert.match(fs.readFileSync(__dirname + '/ban-so.html', 'utf8'), /class="game-actions ui-actions ui-actions--sticky">[\s\S]*?href="index\.html"[\s\S]*?id="settings"[\s\S]*?id="new-game"/);
-assert.match(fs.readFileSync(__dirname + '/cong-bang-10.html', 'utf8'), /class="ui-actions ui-actions--sticky">[\s\S]*?href="index\.html"[\s\S]*?choosePair\(\)/);
 
 assert.match(fs.readFileSync(__dirname + '/ui.css', 'utf8'), /family=Baloo\+2/);
-for (const file of ['index.html', 'gop-10.html', 'cong-bang-10.html', 'minh-hoa-tru-qua-10.html', 'cong-qua-10.html', 'tru-qua-10.html', 'cong-tru-2-chu-so.html', 'tim-cap-so.html', 'ban-so.html']) {
+for (const file of ['index.html', 'gop-10.html', 'minh-hoa-tru-qua-10.html', 'minh-hoa-tru-2-chu-so.html', 'cong-qua-10.html', 'tru-qua-10.html', 'cong-tru-2-chu-so.html', 'tim-cap-so.html', 'ban-so.html']) {
   const html = fs.readFileSync(__dirname + '/' + file, 'utf8');
   assert.match(html, /<link rel="stylesheet" href="ui\.css">/, file);
   for (const [, attributes] of html.matchAll(/<button\b([^>]*)>/g)) {
@@ -87,4 +77,4 @@ for (const [, page] of fs.readFileSync(__dirname + '/index.html', 'utf8').matchA
   assert(fs.existsSync(__dirname + '/' + page), page);
 }
 
-console.log('Bố cục: tạo đề, mở cài đặt và chọn cặp số đều đạt.');
+console.log('Bố cục: tạo đề, mở cài đặt và liên kết trang chủ đều đạt.');

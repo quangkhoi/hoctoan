@@ -2,20 +2,21 @@ const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const vm = require('node:vm');
 
-const practiceScript = fs.readFileSync(__dirname + '/tru-qua-10.html', 'utf8').match(/<script>([\s\S]*?)<\/script>/)[1];
+const practiceScript = fs.readFileSync(__dirname + '/cong-tru-2-chu-so.html', 'utf8').match(/<script>([\s\S]*?)<\/script>/)[1];
 const practice = vm.createContext({
   document: { getElementById: () => ({ addEventListener() {} }), querySelector: () => ({ value: 'input' }), querySelectorAll: () => [] },
+  window: { location: { hash: '' } },
   Math,
 });
 vm.runInContext(practiceScript, practice);
-const cases = vm.runInContext('Array.from({ length: 1000 }, () => createProblem(null))', practice);
+const cases = vm.runInContext('Array.from({ length: 1000 }, () => createProblem("subtract10", "mixed", null))', practice);
 for (const { first, second, answer, operator } of cases) {
   assert(first >= 10 && first <= 18 && second >= 1 && second <= 9);
   assert(second > first % 10 && answer >= 1 && answer <= 9 && answer === first - second);
-  assert.equal(operator, '-');
+  assert.equal(operator, '−');
 }
 for (let answer = 1; answer <= 9; answer++) {
-  const distractors = vm.runInContext(`generateDistractors(${answer})`, practice);
+  const distractors = vm.runInContext(`generateDistractors(${answer}, 'subtract10')`, practice);
   assert.equal(new Set(distractors).size, 2);
   assert(distractors.every(value => value >= 1 && value <= 9 && value !== answer));
 }

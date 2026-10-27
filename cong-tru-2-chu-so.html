@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Cộng trừ 2–3 chữ số - Bé học toán</title>
+  <title>Luyện cộng trừ và tìm x - Bé học toán</title>
   <style>
 
     :root {
@@ -64,6 +64,7 @@
     .brand small { display: block; font-size: 13px; color: #999; font-weight: 600; margin-top: 2px; }
 
     .field { margin-bottom: 16px; }
+    .field .hint { margin-top: 6px; }
     .field label, .field legend {
       display: block;
       margin-bottom: 6px;
@@ -121,6 +122,7 @@
       background: #f3e5f5;
       color: var(--purple);
     }
+    [hidden] { display: none !important; }
 
     .actions { display: grid; gap: 8px; margin-top: 20px; }
 
@@ -215,6 +217,19 @@
       gap: 12px;
       min-height: 82px;
     }
+    .problems.horizontal .problem.mcq { grid-template-columns: minmax(0, 1fr) 32px; }
+    .problems.horizontal .problem.find-x { grid-template-columns: minmax(0, 1fr) 32px; }
+    .problem.mcq .expression { grid-column: 1 / -1; }
+    .problem.find-x .expression { grid-column: 1 / -1; flex-wrap: wrap; }
+    .hint-formula { padding: 3px 9px; border-radius: 10px; background: #fff1f2; color: #be123c; font-weight: 800; }
+    .find-hint { grid-column: 1 / -1; grid-row: 2; }
+    .x-answer { display: flex; align-items: center; gap: 8px; grid-column: 1; grid-row: 3; font-size: 22px; font-weight: 800; }
+    .problem.find-x .result { grid-column: 2; grid-row: 3; }
+    .mcq-options { display: flex; gap: 6px; }
+    .mcq-btn { width: 54px; min-height: 50px; padding: 0; border: 3px solid #e8e0e2; border-radius: 14px; background: #fcfafb; color: #2d3436; font-size: 22px; }
+    .mcq-btn.selected { border-color: var(--purple); background: #f3e5f5; }
+    .mcq-btn.correct { border-color: var(--correct); background: #d5f5e3; }
+    .mcq-btn.wrong { border-color: var(--wrong); background: #fadbd8; }
 
     .problems.horizontal .expression {
       display: flex;
@@ -326,6 +341,9 @@
       .problems.horizontal, .problems.vertical { grid-template-columns: 1fr; }
       .problems.horizontal .problem { grid-template-columns: minmax(0, 1fr) 72px 26px; gap: 6px; padding: 10px; }
       .problems.horizontal .expression { gap: 4px; font-size: clamp(18px, 5vw, 22px); }
+      .problems.horizontal .problem.mcq { grid-template-columns: minmax(0, 1fr) 26px; }
+      .problems.horizontal .problem.find-x { grid-template-columns: minmax(0, 1fr) 26px; }
+      .mcq-btn { width: 46px; min-height: 44px; font-size: 18px; }
       .problems.vertical .expression { font-size: 20px; }
       input.answer { width: 72px; height: 44px; font-size: 22px; }
     }
@@ -342,17 +360,23 @@
   <div class="app">
     <aside class="sidebar">
       <a class="nav-link ui-button" href="index.html">← Trang chủ</a>
-      <h1 class="brand">Cộng trừ 2–3 chữ số <small>Luyện tập toán vui</small></h1>
+      <h1 class="brand">Luyện cộng trừ và tìm x <small>Chọn phạm vi phù hợp với bé</small></h1>
 
       <div class="field">
-        <label for="digits">🔢 Phạm vi số</label>
-        <select id="digits">
-          <option value="2">2 chữ số (10–99)</option>
-          <option value="3">3 chữ số (100–999)</option>
+        <label for="scope">🔢 Phạm vi ôn tập</label>
+        <select id="scope">
+          <option value="add10">Làm quen cộng qua 10</option>
+          <option value="subtract10">Làm quen trừ qua 10</option>
+          <option value="two" selected>Cộng trừ 2 chữ số</option>
+          <option value="three">Cộng trừ 3 chữ số</option>
+          <option value="findAddend">Tìm số hạng x</option>
+          <option value="findMinuend">Tìm số bị trừ x</option>
+          <option value="findSubtrahend">Tìm số trừ x</option>
         </select>
+        <p class="hint" id="scopeHelp">Hai số từ 10–99; chọn cộng, trừ hoặc ngẫu nhiên.</p>
       </div>
 
-      <div class="field">
+      <div class="field" id="operation-field">
         <label for="operation">🧮 Dạng phép toán</label>
         <select id="operation">
           <option value="mixed">➕➖ Cộng và trừ</option>
@@ -366,7 +390,7 @@
         <input id="count" type="number" min="1" max="60" value="12">
       </div>
 
-      <fieldset class="field">
+      <fieldset class="field" id="layout-field">
         <legend>📐 Cách hiển thị</legend>
         <div class="segmented">
           <label class="choice">
@@ -377,6 +401,14 @@
             <input type="radio" name="layout" value="horizontal">
             ↔️ Hàng ngang
           </label>
+        </div>
+      </fieldset>
+
+      <fieldset class="field" id="answer-mode-field" hidden>
+        <legend>🎯 Kiểu đề</legend>
+        <div class="segmented">
+          <label class="choice"><input type="radio" name="mode" value="input" checked>✏️ Tự nhập</label>
+          <label class="choice"><input type="radio" name="mode" value="mcq">🎲 Trắc nghiệm</label>
         </div>
       </fieldset>
 
@@ -393,8 +425,8 @@
         <button class="ui-button ui-button--primary" id="gradeBtn" type="button">✅ Chấm điểm</button>
       </div>
       <div class="topbar">
-        <h2>🧮 Phép cộng trừ 2–3 chữ số</h2>
-        <p class="hint">Nhập đáp án vào ô trống rồi bấm ✅ Chấm điểm nhé!</p>
+        <h2 id="practiceTitle">🧮 Luyện cộng trừ</h2>
+        <p class="hint" id="hintText">Nhập đáp án vào ô trống rồi bấm ✅ Chấm điểm nhé!</p>
         <div class="score" id="scoreBox">🌟 Chưa có đề bài.</div>
       </div>
 
@@ -409,7 +441,7 @@
 
   <script>
     const app = document.querySelector('.app');
-    const digitsEl = document.getElementById('digits');
+    const scopeEl = document.getElementById('scope');
     const operationEl = document.getElementById('operation');
     const countEl = document.getElementById('count');
     const generateBtn = document.getElementById('generateBtn');
@@ -418,24 +450,76 @@
     const settingsBtn = document.getElementById('settingsBtn');
     const problemsEl = document.getElementById('problems');
     const scoreBox = document.getElementById('scoreBox');
+    const hintText = document.getElementById('hintText');
 
     let problems = [];
     let currentLayout = 'vertical';
+    let currentMode = 'input';
+    let currentScope = 'two';
 
     function randomInt(min, max) {
       return Math.floor(Math.random() * (max - min + 1)) + min;
     }
 
-    function getRange(digits) {
-      return digits === '3' ? { min: 100, max: 999 } : { min: 10, max: 99 };
+    function isBasic(scope) {
+      return scope === 'add10' || scope === 'subtract10';
+    }
+
+    function isFindX(scope) {
+      return scope === 'findAddend' || scope === 'findMinuend' || scope === 'findSubtrahend';
+    }
+
+    function updateScopeSettings() {
+      const basic = isBasic(scopeEl.value);
+      const findX = isFindX(scopeEl.value);
+      document.getElementById('operation-field').hidden = basic || findX;
+      document.getElementById('layout-field').hidden = basic || findX;
+      document.getElementById('answer-mode-field').hidden = !basic;
+      const help = {
+        add10: 'Hai số từ 1–9, tổng từ 10–18.',
+        subtract10: 'Số từ 10–18 trừ số từ 1–9, kết quả từ 1–9.',
+        two: 'Hai số từ 10–99; chọn cộng, trừ hoặc ngẫu nhiên.',
+        three: 'Hai số từ 100–999; chọn cộng, trừ hoặc ngẫu nhiên.',
+        findAddend: 'Tìm số hạng còn thiếu. Ví dụ: 12 + x = 30.',
+        findMinuend: 'Tìm số bị trừ. Ví dụ: x − 15 = 30.',
+        findSubtrahend: 'Tìm số trừ. Ví dụ: 60 − x = 17.',
+      };
+      document.getElementById('scopeHelp').textContent = help[scopeEl.value];
     }
 
     function getSelectedLayout() {
       return document.querySelector('input[name="layout"]:checked').value;
     }
 
-    function createProblem(digits, operationMode) {
-      const range = getRange(digits);
+    function createProblem(scope, operationMode, prev) {
+      if (isBasic(scope)) {
+        let first, second, attempts = 0;
+        do {
+          first = scope === 'add10' ? randomInt(1, 9) : randomInt(10, 18);
+          second = scope === 'add10' ? randomInt(Math.max(1, 10 - first), 9) : randomInt(first - 9, 9);
+          attempts++;
+        } while (prev && first === prev.first && second === prev.second && attempts < 50);
+        return { first, second, operator: scope === 'add10' ? '+' : '−', answer: scope === 'add10' ? first + second : first - second };
+      }
+
+      if (scope === 'findAddend') {
+        const total = randomInt(20, 99);
+        const known = randomInt(10, total - 1);
+        const missingFirst = Math.random() < 0.5;
+        return { first: missingFirst ? 'x' : known, second: missingFirst ? known : 'x', operator: '+', total, answer: total - known, findX: true };
+      }
+      if (scope === 'findMinuend') {
+        const second = randomInt(10, 89);
+        const total = randomInt(10, 99 - second);
+        return { first: 'x', second, operator: '−', total, answer: second + total, findX: true };
+      }
+      if (scope === 'findSubtrahend') {
+        const first = randomInt(20, 99);
+        const total = randomInt(10, first - 1);
+        return { first, second: 'x', operator: '−', total, answer: first - total, findX: true };
+      }
+
+      const range = scope === 'three' ? { min: 100, max: 999 } : { min: 10, max: 99 };
       let operator = operationMode;
       if (operator === 'mixed') operator = Math.random() > 0.5 ? 'add' : 'subtract';
 
@@ -450,7 +534,38 @@
       return { first, second, operator: '-', answer: first - second };
     }
 
+    function generateDistractors(correctAnswer, scope) {
+      const min = scope === 'add10' ? 10 : 1;
+      const max = scope === 'add10' ? 18 : 9;
+      const distractors = new Set();
+      while (distractors.size < 2) {
+        const value = randomInt(min, max);
+        if (value !== correctAnswer) distractors.add(value);
+      }
+      return [...distractors];
+    }
+
+    function shuffle(values) {
+      for (let i = values.length - 1; i > 0; i--) {
+        const j = randomInt(0, i);
+        [values[i], values[j]] = [values[j], values[i]];
+      }
+      return values;
+    }
+
+    function hintFormula(problem) {
+      if (problem.operator === '+') {
+        return `x = ${problem.total} − ${problem.first === 'x' ? problem.second : problem.first}`;
+      }
+      return problem.first === 'x'
+        ? `x = ${problem.total} + ${problem.second}`
+        : `x = ${problem.first} − ${problem.total}`;
+    }
+
     function expressionTemplate(problem, layout) {
+      if (problem.findX) {
+        return `<div class="expression"><span>${problem.first}</span><span>${problem.operator}</span><span>${problem.second}</span><span>=</span><span>${problem.total}</span><span class="hint-formula" role="status" hidden>${hintFormula(problem)}</span></div>`;
+      }
       if (layout === 'vertical') {
         return `
           <div class="expression">
@@ -485,28 +600,65 @@
         return;
       }
 
-      problemsEl.innerHTML = problems.map((problem, index) => `
-        <article class="problem" data-index="${index}">
-          ${expressionTemplate(problem, currentLayout)}
-          <input class="answer" type="number" inputmode="numeric" aria-label="Đáp án câu ${index + 1}">
-          <span class="result" aria-hidden="true"></span>
-        </article>
-      `).join('');
+      if (currentMode === 'input') {
+        problemsEl.innerHTML = problems.map((problem, index) => `
+          <article class="problem ${problem.findX ? 'find-x' : ''}" data-index="${index}">
+            ${expressionTemplate(problem, currentLayout)}
+            ${problem.findX ? `<div class="find-hint"><button class="ui-button hint-button" type="button" aria-label="Xem gợi ý câu ${index + 1}">💡 Gợi ý</button></div>` : ''}
+            ${problem.findX
+              ? `<label class="x-answer">x = <input class="answer" type="number" inputmode="numeric" aria-label="Giá trị x câu ${index + 1}"></label>`
+              : `<input class="answer" type="number" inputmode="numeric" aria-label="Đáp án câu ${index + 1}">`}
+            <span class="result" aria-hidden="true"></span>
+          </article>
+        `).join('');
+        return;
+      }
+
+      problemsEl.innerHTML = problems.map((problem, index) => {
+        const options = shuffle([problem.answer, ...generateDistractors(problem.answer, currentScope)]);
+        return `
+          <article class="problem mcq" data-index="${index}">
+            ${expressionTemplate(problem, 'horizontal')}
+            <div class="mcq-options" role="radiogroup" aria-label="Đáp án câu ${index + 1}">
+              ${options.map(value => `<button class="mcq-btn" type="button" data-value="${value}" role="radio" aria-checked="false">${value}</button>`).join('')}
+            </div>
+            <span class="result" aria-hidden="true"></span>
+          </article>
+        `;
+      }).join('');
+      problemsEl.querySelectorAll('.mcq-options').forEach(group => {
+        const buttons = group.querySelectorAll('.mcq-btn');
+        buttons.forEach(button => button.addEventListener('click', () => {
+          buttons.forEach(item => { item.classList.remove('selected'); item.setAttribute('aria-checked', 'false'); });
+          button.classList.add('selected');
+          button.setAttribute('aria-checked', 'true');
+        }));
+      });
     }
 
     function generateProblems() {
-      const digits = digitsEl.value;
-      const operationMode = operationEl.value;
-      const count = Math.min(60, Math.max(1, Number(countEl.value) || 1));
+      const count = Math.min(60, Math.max(1, Math.trunc(Number(countEl.value)) || 1));
       countEl.value = count;
-      currentLayout = getSelectedLayout();
+      currentScope = scopeEl.value;
+      currentMode = isBasic(currentScope) ? document.querySelector('input[name="mode"]:checked').value : 'input';
+      currentLayout = isBasic(currentScope) || isFindX(currentScope) ? 'horizontal' : getSelectedLayout();
+      const titles = { add10: 'Cộng qua 10', subtract10: 'Trừ qua 10', two: 'Cộng trừ 2 chữ số', three: 'Cộng trừ 3 chữ số', findAddend: 'Tìm số hạng x', findMinuend: 'Tìm số bị trừ x', findSubtrahend: 'Tìm số trừ x' };
+      document.getElementById('practiceTitle').textContent = `🧮 ${titles[currentScope]}`;
 
-      problems = Array.from({ length: count }, () => createProblem(digits, operationMode));
+      problems = [];
+      for (let i = 0; i < count; i++) {
+        problems.push(createProblem(currentScope, operationEl.value, problems[i - 1]));
+      }
       scoreBox.innerHTML = `🌟 Đã tạo <strong>${count}</strong> câu.`;
+      hintText.textContent = isFindX(currentScope)
+        ? 'Tìm giá trị x rồi nhập vào ô trống. Bấm 💡 Gợi ý nếu cần.'
+        : currentMode === 'mcq'
+        ? 'Chọn đáp án đúng cho mỗi câu rồi bấm ✅ Chấm điểm!'
+        : 'Nhập đáp án vào ô trống rồi bấm ✅ Chấm điểm nhé!';
       renderProblems();
       app.classList.add('practicing');
 
-      const firstAnswer = problemsEl.querySelector('.answer');
+      const firstAnswer = problemsEl.querySelector('.answer, .mcq-btn');
       if (firstAnswer) firstAnswer.focus();
     }
 
@@ -521,11 +673,19 @@
 
       cards.forEach((card) => {
         const index = Number(card.dataset.index);
-        const input = card.querySelector('.answer');
         const result = card.querySelector('.result');
-        const value = Number(input.value);
-        const hasAnswer = input.value.trim() !== '';
-        const isCorrect = hasAnswer && value === problems[index].answer;
+        let isCorrect = false;
+        if (currentMode === 'input') {
+          const input = card.querySelector('.answer');
+          isCorrect = input.value.trim() !== '' && Number(input.value) === problems[index].answer;
+        } else {
+          const selected = card.querySelector('.mcq-btn.selected');
+          if (selected) {
+            isCorrect = Number(selected.dataset.value) === problems[index].answer;
+            selected.classList.toggle('correct', isCorrect);
+            selected.classList.toggle('wrong', !isCorrect);
+          }
+        }
 
         card.classList.toggle('correct', isCorrect);
         card.classList.toggle('wrong', !isCorrect);
@@ -550,6 +710,16 @@
     generateBtn.addEventListener('click', generateProblems);
     regenerateBtn.addEventListener('click', generateProblems);
     gradeBtn.addEventListener('click', gradeProblems);
+    problemsEl.addEventListener('click', event => {
+      const button = event.target.closest('.hint-button');
+      if (!button) return;
+      button.closest('.problem').querySelector('.hint-formula').hidden = false;
+      button.disabled = true;
+    });
+    scopeEl.addEventListener('change', updateScopeSettings);
+    const linkedScope = window.location.hash.slice(1);
+    if (['add10', 'subtract10', 'two', 'three', 'findAddend', 'findMinuend', 'findSubtrahend'].includes(linkedScope)) scopeEl.value = linkedScope;
+    updateScopeSettings();
     settingsBtn.addEventListener('click', () => {
       app.classList.remove('practicing');
       window.scrollTo(0, 0);
