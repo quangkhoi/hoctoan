@@ -6,7 +6,7 @@
   <title>Minh họa trừ qua 10</title>
   <style>
     * { box-sizing: border-box; }
-    body { margin: 0; min-height: 100dvh; padding: 16px; background: linear-gradient(150deg, #e0f2fe, #f5f3ff); color: #1e293b; font-family: Arial, Helvetica, sans-serif; }
+    body { margin: 0; min-height: 100dvh; padding: 16px; background: linear-gradient(150deg, #e0f2fe, #f5f3ff); color: #1e293b; }
     main { width: min(100%, 800px); margin: 0 auto; }
     h1 { margin: 12px 0 8px; color: #1d4ed8; font-size: clamp(26px, 6vw, 38px); }
     h2 { margin: 0 0 12px; font-size: 20px; }
@@ -16,7 +16,7 @@
     .card { padding: 20px; border-radius: 18px; background: white; box-shadow: 0 8px 28px #1e293b18; }
     #setup { width: min(100%, 440px); margin: 24px auto; }
     .inputs { display: flex; align-items: center; justify-content: center; gap: 10px; margin: 20px 0; }
-    .inputs input { width: clamp(60px, 22vw, 88px); height: 54px; border: 2px solid #93c5fd; border-radius: 12px; font: 700 26px Arial, sans-serif; text-align: center; }
+    .inputs input { width: clamp(60px, 22vw, 88px); height: 54px; border: 2px solid #93c5fd; border-radius: 12px; font: 700 26px var(--ui-font); text-align: center; }
     .inputs span { font-size: 28px; font-weight: bold; }
     .setup-actions { display: flex; flex-wrap: wrap; gap: 8px; }
     .setup-actions .ui-button { flex: 1 1 160px; }
@@ -25,16 +25,29 @@
     .summary { text-align: center; }
     #equation { color: #1d4ed8; font-size: clamp(28px, 8vw, 48px); font-weight: 800; }
     #explanation { min-height: 3em; font-size: clamp(17px, 4vw, 21px); font-weight: 700; }
-    .frames { display: flex; flex-wrap: wrap; justify-content: center; gap: 14px; cursor: pointer; }
-    .frame { flex: 1 1 270px; max-width: 350px; min-width: 0; padding: 14px; border: 2px dashed #93c5fd; border-radius: 16px; background: #fff; text-align: center; }
+    .frames { display: grid; gap: 14px; cursor: pointer; }
+    .number-row { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
+    .frame { width: 100%; max-width: 350px; min-width: 0; justify-self: center; padding: 14px; border: 2px dashed #93c5fd; border-radius: 16px; background: #fff; text-align: center; }
+    #whole-frame, #subtract-whole-frame, .frame.single { grid-column: 1 / -1; }
     .cells { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 5px; }
     .cell { display: grid; place-items: center; aspect-ratio: 1; border: 1px solid #cbd5e1; border-radius: 9px; background: #f8fafc; }
     .candy { font-size: clamp(21px, 5vw, 32px); line-height: 1; }
+    .subtract-frame { border-color: #fdba74; background: #fff7ed; }
+    .used .cell { opacity: .35; }
+    .used h2 { color: #64748b; }
     .to-remove { outline: 3px solid #ef4444; outline-offset: -3px; background: #ffe4e6; }
     .step-hint { margin: 12px 0; text-align: center; font-weight: 700; color: #475569; }
     body.studying .intro { display: none; }
     [hidden] { display: none !important; }
-    @media (max-width: 600px) { body { padding: 10px; } .card { padding: 14px; } .frame { flex-basis: 100%; } }
+    @media (max-width: 600px) {
+      body { padding: 10px; }
+      .card { padding: 14px; }
+      .number-row { gap: 8px; }
+      .frame { padding: 8px; }
+      .frame h2 { font-size: clamp(13px, 3.4vw, 20px); line-height: 1.2; }
+      .cells { gap: 2px; }
+      .candy { font-size: clamp(14px, 4vw, 24px); }
+    }
   </style>
   <link rel="stylesheet" href="ui.css">
 </head>
@@ -73,13 +86,33 @@
         <p id="explanation" aria-live="polite"></p>
       </div>
       <div class="frames" id="stage" role="button" tabindex="0" aria-label="Chạm hoặc nhấn Enter để xem bước tiếp theo">
-        <div class="frame">
-          <h2>Nhóm 10 🍬</h2>
-          <div class="cells" id="tens"></div>
+        <div class="number-row">
+          <div class="frame" id="whole-frame">
+            <h2>Số bị trừ: <span id="whole-count"></span></h2>
+            <div class="cells" id="whole"></div>
+          </div>
+          <div class="frame" id="tens-frame" hidden>
+            <h2>Số bị trừ: nhóm 10 🍬</h2>
+            <div class="cells" id="tens"></div>
+          </div>
+          <div class="frame" id="units-frame" hidden>
+            <h2 id="units-title"></h2>
+            <div class="cells" id="units"></div>
+          </div>
         </div>
-        <div class="frame">
-          <h2>Nhóm đơn vị 🍭</h2>
-          <div class="cells" id="units"></div>
+        <div class="number-row">
+          <div class="frame subtract-frame" id="subtract-whole-frame">
+            <h2>Số trừ: <span id="second-count"></span></h2>
+            <div class="cells" id="subtract-whole"></div>
+          </div>
+          <div class="frame subtract-frame" id="subtract-tens-frame" hidden>
+            <h2 id="subtract-tens-title"></h2>
+            <div class="cells" id="subtract-tens"></div>
+          </div>
+          <div class="frame subtract-frame" id="subtract-units-frame" hidden>
+            <h2 id="subtract-units-title"></h2>
+            <div class="cells" id="subtract-units"></div>
+          </div>
         </div>
       </div>
       <p class="step-hint" id="step-hint">Chạm vào hình hoặc nhấn Enter để xem bước tiếp theo.</p>
@@ -95,8 +128,8 @@
     let first = 13, second = 5, step = 0;
 
     function drawFrame(id, count, highlighted = 0) {
-      document.getElementById(id).innerHTML = Array.from({ length: 10 }, (_, index) => {
-        const candy = index < count ? `<span class="candy">${id === 'tens' ? '🍬' : '🍭'}</span>` : '';
+      document.getElementById(id).innerHTML = Array.from({ length: id === 'whole' || id === 'subtract-whole' ? count : 10 }, (_, index) => {
+        const candy = index < count ? `<span class="candy">${id === 'tens' || id === 'subtract-tens' || (id === 'whole' && index < 10) ? '🍬' : '🍭'}</span>` : '';
         return `<div class="cell ${index >= count - highlighted && index < count ? 'to-remove' : ''}">${candy}</div>`;
       }).join('');
     }
@@ -105,26 +138,47 @@
       const units = first - 10;
       const remaining = second - units;
       const answer = first - second;
-      drawFrame('tens', step === 4 ? answer : 10, step === 3 ? remaining : 0);
-      drawFrame('units', step < 2 ? units : 0, step === 1 ? units : 0);
+      document.getElementById('whole-count').textContent = first;
+      document.getElementById('second-count').textContent = second;
+      document.getElementById('units-title').textContent = `Số bị trừ: ${units} đơn vị 🍭`;
+      document.getElementById('subtract-units-title').textContent = step >= 3 ? `Đã bớt ${units} đơn vị 🍭` : `Số trừ: ${units} đơn vị 🍭`;
+      document.getElementById('subtract-tens-title').textContent = step >= 5 ? `Đã bớt ${remaining} từ nhóm 10 🍬` : `Số trừ: ${remaining} từ nhóm 10 🍬`;
+      document.getElementById('whole-frame').hidden = step !== 0;
+      document.getElementById('tens-frame').hidden = step === 0;
+      document.getElementById('units-frame').hidden = step === 0 || units === 0;
+      document.getElementById('subtract-whole-frame').hidden = step >= 2;
+      document.getElementById('subtract-units-frame').hidden = step < 2 || units === 0;
+      document.getElementById('subtract-tens-frame').hidden = step < 2;
+      document.getElementById('tens-frame').classList.toggle('single', units === 0);
+      document.getElementById('subtract-tens-frame').classList.toggle('single', units === 0);
+      document.getElementById('subtract-units-frame').classList.toggle('used', step >= 3);
+      document.getElementById('subtract-tens-frame').classList.toggle('used', step >= 5);
+      drawFrame('whole', first);
+      drawFrame('tens', step === 5 ? answer : 10, step === 4 ? remaining : 0);
+      drawFrame('units', step < 3 ? units : 0, step === 2 ? units : 0);
+      drawFrame('subtract-whole', second);
+      drawFrame('subtract-units', units);
+      drawFrame('subtract-tens', remaining);
 
       const formulas = [
         `${first} − ${second} = ?`,
+        `${first} = 10 + ${units}`,
         `${second} = ${units} + ${remaining}`,
         `${first} − ${units} = 10`,
         `10 − ${remaining} = ?`,
         `${first} − ${second} = ${answer}`,
       ];
       const messages = [
-        `${first} có 1 nhóm 10 và ${units} đơn vị. ${units} đơn vị chưa đủ để bớt ${second}.`,
-        `Tách ${second} thành ${units} và ${remaining}. Trước tiên bớt ${units} đơn vị được tô đỏ.`,
-        `Đã bớt ${units} đơn vị. Còn đúng 10, rồi bớt tiếp ${remaining}.`,
-        `Tô đỏ ${remaining} kẹo trong nhóm 10 để chuẩn bị bớt đi.`,
+        `Số bị trừ là ${first} viên kẹo; số trừ là ${second} viên kẹo. Trước tiên tách số bị trừ.`,
+        `Tách số bị trừ ${first} thành 1 nhóm 10 và ${units} đơn vị. Số trừ ${second} vẫn ở khung màu cam.`,
+        units === 0 ? `Số bị trừ không có đơn vị lẻ. Bớt trực tiếp ${second} viên từ nhóm 10.` : `Tách số trừ ${second} thành ${units} để bớt ở đơn vị và ${remaining} để bớt ở nhóm 10. Tô đỏ ${units} đơn vị sẽ bớt trước.`,
+        `Đã bớt ${units} đơn vị theo phần đầu của số trừ. Số bị trừ còn đúng 10.`,
+        `Phần còn lại của số trừ là ${remaining}. Tô đỏ ${remaining} viên trong nhóm 10 để bớt tiếp.`,
         `Còn ${answer} kẹo. Vậy ${first} − ${second} = ${answer}! 🎉`,
       ];
       equation.textContent = formulas[step];
       explanation.textContent = messages[step];
-      document.getElementById('step-hint').textContent = step === 4
+      document.getElementById('step-hint').textContent = step === 5
         ? 'Hoàn thành! Chọn Phép tính mới để xem tiếp.'
         : 'Chạm vào hình hoặc nhấn Enter để xem bước tiếp theo.';
     }
@@ -151,7 +205,7 @@
     }
 
     function nextStep() {
-      if (step < 4) { step++; render(); }
+      if (step < 5) { step += first === 10 && step === 2 ? 2 : 1; render(); }
     }
 
     setup.addEventListener('submit', event => { event.preventDefault(); start(); });

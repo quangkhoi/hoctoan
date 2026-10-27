@@ -6,7 +6,7 @@
   <title>Bắn số — Hỗ trợ học tập</title>
   <style>
     * { box-sizing: border-box; }
-    body { margin: 0; min-height: 100dvh; font-family: Arial, Helvetica, sans-serif; color: #193048; background: linear-gradient(160deg, #dff6ff, #f7f2ff); }
+    body { margin: 0; min-height: 100dvh; color: #193048; background: linear-gradient(160deg, #dff6ff, #f7f2ff); }
     main { width: min(100% - 24px, 760px); margin: auto; padding: 14px 0 20px; }
     .top { position: sticky; top: 0; z-index: 20; display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 12px; padding: 4px; border-radius: 12px; background: #eaf7ff; }
     body.playing .top { display: none; }
@@ -261,7 +261,7 @@
       ctx.strokeStyle = '#ffffff';
       ctx.stroke();
       ctx.fillStyle = '#ffffff';
-      ctx.font = value >= 10 ? 'bold 18px Arial' : 'bold 22px Arial';
+      ctx.font = value >= 10 ? 'bold 18px "Baloo 2", "Segoe UI", sans-serif' : 'bold 22px "Baloo 2", "Segoe UI", sans-serif';
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
       ctx.fillText(value, x, y + 1);

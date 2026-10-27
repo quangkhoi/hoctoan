@@ -1,7 +1,13 @@
+@import url('https://fonts.googleapis.com/css2?family=Baloo+2:wght@400;500;600;700;800&display=swap');
+
 :root {
   --ui-blue: #2563eb;
   --ui-blue-dark: #1d4ed8;
+  --ui-font: 'Baloo 2', 'Segoe UI', Arial, sans-serif;
 }
+
+body { font-family: var(--ui-font); }
+button, input, select { font-family: inherit; }
 
 .ui-actions {
   display: flex;
@@ -33,7 +39,7 @@ a.ui-button {
   background: #eaf1ff;
   color: var(--ui-blue-dark);
   box-shadow: none;
-  font: 700 16px/1.2 Arial, Helvetica, sans-serif;
+  font: 700 16px/1.2 var(--ui-font);
   text-align: center;
   text-decoration: none;
   cursor: pointer;

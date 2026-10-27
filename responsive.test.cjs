@@ -71,7 +71,8 @@ assert.match(fs.readFileSync(__dirname + '/gop-10.html', 'utf8'), /class="practi
 assert.match(fs.readFileSync(__dirname + '/ban-so.html', 'utf8'), /class="game-actions ui-actions ui-actions--sticky">[\s\S]*?href="index\.html"[\s\S]*?id="settings"[\s\S]*?id="new-game"/);
 assert.match(fs.readFileSync(__dirname + '/cong-bang-10.html', 'utf8'), /class="ui-actions ui-actions--sticky">[\s\S]*?href="index\.html"[\s\S]*?choosePair\(\)/);
 
-for (const file of ['gop-10.html', 'cong-bang-10.html', 'minh-hoa-tru-qua-10.html', 'cong-qua-10.html', 'tru-qua-10.html', 'cong-tru-2-chu-so.html', 'tim-cap-so.html', 'ban-so.html']) {
+assert.match(fs.readFileSync(__dirname + '/ui.css', 'utf8'), /family=Baloo\+2/);
+for (const file of ['index.html', 'gop-10.html', 'cong-bang-10.html', 'minh-hoa-tru-qua-10.html', 'cong-qua-10.html', 'tru-qua-10.html', 'cong-tru-2-chu-so.html', 'tim-cap-so.html', 'ban-so.html']) {
   const html = fs.readFileSync(__dirname + '/' + file, 'utf8');
   assert.match(html, /<link rel="stylesheet" href="ui\.css">/, file);
   for (const [, attributes] of html.matchAll(/<button\b([^>]*)>/g)) {
